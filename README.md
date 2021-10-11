@@ -1,5 +1,6 @@
 # McServerApp
-Permet de lancer un fichier .bat destiné à lancer un serveur minecraft dont le protocole RCON est activé
+Permet de lancer un fichier .bat destiné à lancer un serveur minecraft dont le protocole RCON est activé.  
+En lien avec : https://glitch.com/~mcserverapp
 
 ## Usage
 *McServerApp.jar* se lance en ligne de commande : ```java -jar McServerApp.jar <fichier de configuration>```  
