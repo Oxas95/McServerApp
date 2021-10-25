@@ -132,7 +132,6 @@ public class Configuration {
     		file += s.nextLine();
     	}
     	s.close();
-    	System.out.println(file);
     	obj = new JSONObject(file);
 	}
 	
