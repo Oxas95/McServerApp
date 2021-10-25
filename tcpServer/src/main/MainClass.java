@@ -15,7 +15,7 @@ public class MainClass {
 		Configuration config = new Configuration(args[0]);
 		if(!config.isValid()) return;
 		TcpServer server = new TcpServer(config);
-		server.startServer();
+		if(config.getAutoStart()) server.startServer();
 		while(!server.closed()) {
 			try {
 				server.connect();

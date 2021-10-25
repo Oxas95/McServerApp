@@ -67,4 +67,8 @@ public class TcpServer extends AbstractProcessContainer {
 			sendCmd("stop");
 		}
 	}
+	
+	public Configuration getConfig() {
+		return config;
+	}
 }

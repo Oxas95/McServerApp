@@ -11,53 +11,107 @@ import org.json.*;
 
 public class Configuration {
 	private JSONObject obj = null;
-	private int aport = 0;
+	private Integer aport;
 	private String passwordStart = null;
 	private String passwordStop = null;
 	private String batchPath = null;
-	private int rport = 0;
+	private Integer rport;
 	private String ip = null;
 	private String passwordRcon = null;
+	private Boolean autoStart;
+	private static String none = "not set";
 
 	public Configuration(String fileName) {
 		try {
-			getConfig(fileName);
+			readConfig(fileName);
 		} catch (NullPointerException | IOException e) {
 			System.err.println("Unable to load configuration");
 		}
 	}
 	
-	private void getConfig(String fileName) throws NullPointerException, IOException {
+	private void insertKeysValues() {
+		try {
+			obj.get(Keys.startPassword.toString());
+		} catch(JSONException e) {
+			obj.put(Keys.startPassword.toString(), none);
+		}
+		try {
+			obj.get(Keys.stopPassword.toString());
+		} catch(JSONException e) {
+			obj.put(Keys.stopPassword.toString(), none);
+		}
+		try {
+			obj.get(Keys.appPort.toString());
+		} catch(JSONException e) {
+			obj.put(Keys.appPort.toString(), 0);
+		}
+		try {
+			obj.get(Keys.batchPath.toString());
+		} catch(JSONException e) {
+			obj.put(Keys.batchPath.toString(), none);
+		}
+		try {
+			obj.get(Keys.rconPort.toString());
+		} catch(JSONException e) {
+			obj.put(Keys.rconPort.toString(), 0);
+		}
+		try {
+			obj.get(Keys.rconIp.toString());
+		} catch(JSONException e) {
+			obj.put(Keys.rconIp.toString(), none);
+		}
+		try {
+			obj.get(Keys.rconPassword.toString());
+		} catch(JSONException e) {
+			obj.put(Keys.rconPassword.toString(), none);
+		}
+		try {
+			obj.get(Keys.autoStart.toString());
+		} catch(JSONException e) {
+			obj.put(Keys.autoStart.toString(), false);
+		}
+	}
+	
+	private Object getValueConfig(String key) {
+		try {
+			return obj.get(key);
+		} catch (JSONException e) {
+			System.err.println("Missing parameter \"" + key + "\". Edit the config file to set the value of the new parameter (auto added).");
+			return null;
+		}
+	}
+	
+	private void readConfig(String fileName) throws NullPointerException, IOException, JSONException {
 		readFile(fileName);
 		if(obj == null) {
 			System.out.println("New file configuration is created");
 			System.out.println("Edit the generated file and re-run this app");
 			return;
 		}
-		aport = (int) obj.get("app port");
-		rport = (int) obj.get("rcon port");
+		
+		/*Lecture des paramètres*/
+		aport = (Integer) getValueConfig(Keys.appPort.toString());
+		rport = (Integer) getValueConfig(Keys.rconPort.toString());
 		if(aport < 1000 || rport < 1000) {
 			System.err.println("Port must be upper than 1000");
 			obj = null;
 		}
-		passwordStart =  (String) obj.get("server start password");
-		passwordStop  =  (String) obj.get("server stop password");
-		batchPath     = ((String) obj.get("batch path")).replace("/", "\\");
-		ip            =  (String) obj.get("rcon ip");
-		passwordRcon  =  (String) obj.get("rcon password");
+		passwordStart =  (String)  getValueConfig(Keys.startPassword.toString());
+		passwordStop  =  (String)  getValueConfig(Keys.stopPassword.toString());
+		batchPath     = ((String)  getValueConfig(Keys.batchPath.toString())).replace("/", "\\");
+		ip            =  (String)  getValueConfig(Keys.rconIp.toString());
+		passwordRcon  =  (String)  getValueConfig(Keys.rconPassword.toString());
+		autoStart	  =  (Boolean) getValueConfig(Keys.autoStart.toString());
 		
+		if(!this.isValid()) {
+			insertKeysValues();
+			jsonToFile(fileName);
+		}
 	}
 	
 	private void generateNewConfigFile(String fileName) throws NullPointerException, IOException {
 		obj = new JSONObject();
-		String none = "not set";
-		obj.put("server start password", none);
-		obj.put("server stop password", none);
-		obj.put("app port", 0);
-		obj.put("batch path", none);
-		obj.put("rcon port", 0);
-		obj.put("rcon ip", none);
-		obj.put("rcon password", none);
+		insertKeysValues();
 		jsonToFile(fileName);
 		obj = null;
 	}
@@ -78,6 +132,7 @@ public class Configuration {
     		file += s.nextLine();
     	}
     	s.close();
+    	System.out.println(file);
     	obj = new JSONObject(file);
 	}
 	
@@ -101,8 +156,18 @@ public class Configuration {
 		return batchPath;
 	}
 	
+	/**
+	 * Vérifie si l'objet JSON et chaque clé contient une valeur
+	 * @return true si vérification ok, false sinon
+	 */
 	public boolean isValid() {
-		return null != obj;
+		try {
+			return null != obj && this.aport != null && this.autoStart != null && this.batchPath != null
+					&& this.ip != null && this.passwordRcon != null && this.passwordStart != null
+					&& this.passwordStop != null && this.rport != null;
+		} catch(Exception e) {
+			return false;
+		}
 	}
 
 	public int getAport() {
@@ -119,5 +184,9 @@ public class Configuration {
 
 	public String getPasswordRcon() {
 		return passwordRcon;
+	}
+	
+	public boolean getAutoStart() {
+		return autoStart;
 	}
 }
