@@ -1,8 +1,8 @@
 package main;
 
 public enum Keys {
-	stopPassword("server start password"),
-	startPassword("server stop password"),
+	startPassword("server start password"),
+	stopPassword("server stop password"),
 	appPort("app port"),
 	batchPath("batch path"),
 	rconPort("rcon port"),
