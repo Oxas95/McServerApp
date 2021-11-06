@@ -1,4 +1,4 @@
-package main;
+package main.process;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -6,10 +6,11 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import main.files.Configuration;
 import net.kronos.rkon.core.Rcon;
 import net.kronos.rkon.core.ex.AuthenticationException;
 
-public class TcpServer extends AbstractProcessContainer {
+public class TcpServer extends ProcessContainer {
 	private ServerSocket server;
 	private Configuration config;
 	private ThreadProcess tp;
@@ -46,7 +47,7 @@ public class TcpServer extends AbstractProcessContainer {
 	}
 	
 	private void sendCmd(String cmd) throws IOException, AuthenticationException {
-		Rcon rcon = new Rcon(config.getIp(), config.getRport(), config.getPasswordRcon().getBytes());
+		Rcon rcon = new Rcon(config.getIp(), config.getRport(), config.getRconPassword().getBytes());
 		rcon.command(cmd);
 		rcon.disconnect();
 	}
@@ -65,6 +66,16 @@ public class TcpServer extends AbstractProcessContainer {
 		if(process != null) {
 			System.out.println("Server stopped");
 			sendCmd("stop");
+			try {
+				Thread.sleep(1000 * config.getTimeout());
+				if(process != null) {
+					process.destroyForcibly();
+					process.waitFor();
+					System.out.println("Process killed");
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	

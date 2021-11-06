@@ -1,9 +1,9 @@
-package main;
+package main.process;
 
 public class ThreadProcess extends Thread {
-	private AbstractProcessContainer apc;
+	private ProcessContainer apc;
 	
-	public ThreadProcess(AbstractProcessContainer apc) {
+	public ThreadProcess(ProcessContainer apc) {
 		this.apc = apc;
 	}
 	
@@ -16,6 +16,7 @@ public class ThreadProcess extends Thread {
 				apc.setProcess(null);
 			} catch (InterruptedException e) {
 				System.err.println("Process interrupted");
+				apc.setProcess(null);
 			}
 		}
 	}

@@ -27,3 +27,9 @@ tcpClient/.*
 tcpClient/bin
 tcpServer/.*
 tcpServer/bin
+
+# fichiers de configuration et batchs #
+*.json
+*.bat
+tcpServer/*.json
+tcpServer/*.bat
