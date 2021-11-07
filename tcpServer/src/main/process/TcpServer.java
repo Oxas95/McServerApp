@@ -21,7 +21,7 @@ public class TcpServer extends ProcessContainer {
 		System.out.println("Creating TCP connection on port : " + config.getAport());
 	}
 	
-	public void connect() throws IOException, AuthenticationException {
+	public void connect() throws IOException {
 		System.out.println("Waiting for a connection...");
 		Socket client = server.accept();
 		BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
@@ -34,7 +34,7 @@ public class TcpServer extends ProcessContainer {
 		return server.isClosed();
 	}
 	
-	private void traitement(String message) throws IOException, AuthenticationException {
+	private void traitement(String message) throws IOException {
 		if(config.isStartPassword(message)) {
 			startServer();
 		} else if(config.isStopPassword(message)) {
@@ -46,10 +46,15 @@ public class TcpServer extends ProcessContainer {
 		}
 	}
 	
-	private void sendCmd(String cmd) throws IOException, AuthenticationException {
-		Rcon rcon = new Rcon(config.getIp(), config.getRport(), config.getRconPassword().getBytes());
-		rcon.command(cmd);
-		rcon.disconnect();
+	private void sendCmd(String cmd) {
+		try {
+			Rcon rcon = new Rcon(config.getIp(), config.getRport(), config.getRconPassword().getBytes());
+			rcon.command(cmd);
+			rcon.disconnect();
+		} catch(Exception e) {
+			System.err.println("Rcon : unable to send a command");
+		}
+		
 	}
 	
 	public void startServer() throws IOException {
@@ -59,21 +64,19 @@ public class TcpServer extends ProcessContainer {
 			System.out.println("Server is starting");
 			tp.start();
 		}
-		
 	}
 	
-	public void stopServer() throws IOException, AuthenticationException {
+	public void stopServer() {
 		if(process != null) {
-			System.out.println("Server stopped");
 			sendCmd("stop");
+			System.out.println("Server is stopping");
 			try {
 				Thread.sleep(1000 * config.getTimeout());
 				if(process != null) {
-					process.destroyForcibly();
-					process.waitFor();
+					Runtime.getRuntime().exec(new String[]{ "cmd", "/c", "taskkill /fi \"WINDOWTITLE eq " + config.getBatchPath() + "*\" /t /f"});
 					System.out.println("Process killed");
 				}
-			} catch (InterruptedException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}

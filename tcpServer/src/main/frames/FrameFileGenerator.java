@@ -1,17 +1,22 @@
 package main.frames;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import main.files.Configuration;
 
-import java.io.File;
 
-public class FrameBatchGenerator extends JFrame implements ActionListener{
+public class FrameFileGenerator extends IFrame implements ActionListener{
 	
 	/**
 	 * Default Serial Number 
@@ -24,14 +29,8 @@ public class FrameBatchGenerator extends JFrame implements ActionListener{
 	private JButton chooseConfigPath;
 	private JButton valider;
 	
-	public FrameBatchGenerator() {
-		super();
-		build();
-		addContent();
-		addListeners();
-	}
-	
-	private void build() {
+	@Override
+	protected void build() {
 		setTitle("McServerApp");
 		setSize(400, 100);
 		setResizable(false);
@@ -39,7 +38,8 @@ public class FrameBatchGenerator extends JFrame implements ActionListener{
 		setLocationRelativeTo(null);
 	}
 	
-	private void addContent() {
+	@Override
+	protected void addContent() {
 		JPanel panel = new JPanel();
 		setContentPane(panel);
 		panel.setLayout(new FlowLayout());
@@ -55,7 +55,8 @@ public class FrameBatchGenerator extends JFrame implements ActionListener{
 		panel.add(valider);
 	}
 	
-	private void addListeners() {
+	@Override
+	protected void addListeners() {
 		chooseConfigPath.addActionListener(this);
 		valider.addActionListener(this);
 	}
@@ -69,7 +70,7 @@ public class FrameBatchGenerator extends JFrame implements ActionListener{
 	
 	private void actionValider(Object source) {
 		if(source == valider) {
-			Configuration cfg = new Configuration(text.getText());
+			new Configuration(text.getText());
 		}
 	}
 	
@@ -89,7 +90,6 @@ public class FrameBatchGenerator extends JFrame implements ActionListener{
 			writer.print("java -jar " + System.getProperty("user.dir") + File.separator + "McServerApp.jar " + cfg.getAbsolutePathConfigFile());
 			writer.flush();
 			writer.close();
-			
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 		}

@@ -12,22 +12,6 @@ import org.json.*;
 
 public class Configuration {
 	
-	@Override
-	public String toString() {
-		return "Configuration [obj=" + obj + ", appPort=" + appPort + ", startPassword=" + startPassword
-				+ ", stopPassword=" + stopPassword + ", batchPath=" + batchPath + ", rconPort=" + rconPort + ", rconIp="
-				+ rconIp + ", rconPassword=" + rconPassword + ", autoStart=" + autoStart + ", timeout=" + timeout + "]";
-	}
-	
-	private Integer appPort = null; 
-	private Boolean autoStart = null;
-	private String batchPath = null;
-	private String rconIp = null;
-	private String rconPassword = null;
-	private Integer rconPort = null;
-	private String startPassword = null;
-	private String stopPassword = null;
-	private Integer timeout = null;
 	private JSONObject obj = null;
 	private String fileName;
 	//TODO parametre nogui
@@ -45,15 +29,27 @@ public class Configuration {
 			System.err.println("Unable to load configuration");
 		}
 	}
+
+	/**
+	 * recuperer la valeur du fichier de configuration JSON
+	 * @param key cle pour laquelle il faut extraire sa valeur
+	 * @return la valeur associee a key si key existe et null sinon
+	 */
+	private Object getValueConfig(String key) {
+		try {
+			return obj.get(key);
+		} catch (JSONException e) {
+			System.err.println("Missing parameter \"" + key + "\".");
+			return null;
+		}
+	}
 	
 	/**
 	 * verifie la presence d’une valeur dans le fichier de configuration et l’ajoute si elle est  introuvable
 	 * @param k cle et sa valeur par defaut a ajouter si introuvable dans le fichier
 	 */
 	private void insertIfAbsent(Keys k) {
-		try {
-			obj.get(k.toString());
-		} catch(JSONException e) {
+		if(getValueConfig(k.toString()) == null) {
 			Object tmp = k.getDefaultValue();
 			obj.put(k.toString(), tmp.getClass().cast(tmp));
 		}
@@ -65,21 +61,6 @@ public class Configuration {
 	private void insertKeysValues() {
 		for(Keys k : Keys.values()) {
 			insertIfAbsent(k);
-		}
-	}
-	
-	/**
-	 * recuperer la valeur du fichier de configuration JSON
-	 * @param key cle pour laquelle il faut extraire sa valeur
-	 * @return la valeur associee a key si key existe et null sinon
-	 */
-	private Object getValueConfig(String key) {
-		try {
-			return obj.get(key);
-		} catch (JSONException e) {
-			System.err.println("Missing parameter \"" + key + "\". Edit the config file to set the value of this new parameter added.");
-			//Pas vraiment ajoutes. c'est fait plus tard
-			return null;
 		}
 	}
 	
@@ -98,34 +79,23 @@ public class Configuration {
 			return;
 		}
 		
-		/*Lecture des parametres*/
-		Field[] fsk = Keys.class.getDeclaredFields();
-		for(Field fk : fsk) {
-			try {
-				Keys k = (Keys) fk.get(fk.getName());
-				Field ft = Configuration.class.getDeclaredField(fk.getName());
-				Object value = getValueConfig(k.toString());
-				ft.set(this, value.getClass().cast(value));
-				
-			} catch (Exception e) {
-				//on ignore juste les erreurs
-			}
-		}
-		
-		/*Modification du séparateur si besoin*/
-		batchPath = batchPath.replace("/", File.separator);
-		
-		/*Verification des valeurs des parametres*/
-		if(!this.isValid()) {
+		/*verification des valeurs des parametres*/
+		if(!this.isValid()) { //s'il manque des valeurs
 			insertKeysValues();
 			jsonToFile(fileName);
-		} else {
-			if(appPort < 1000 || rconPort < 1000) {
-				System.err.println("Port must be upper than 1000");
-				obj = null;
+			obj = null;
+		} else { //si les valeurs sont correctes
+			/* startPassword != stopPassword ? */
+			String start = (String) getValueConfig(Keys.startPassword.toString());
+			String stop  = (String) getValueConfig(Keys.stopPassword.toString());
+			if(start.equals(stop)) obj = null;
+			
+			/* verifie la valeur de chaque clé independamment des autres */
+			Keys[] keys = Keys.values();
+			for(int i = 0; i < keys.length && obj != null; i++) {
+				if(!keys[i].check(obj)) obj = null;
 			}
-			//TODO verifier startPassword != stopPassword
-			//TODO demander un mot de passe de taille minimum 8
+			
 		}
 	}
 	
@@ -139,7 +109,6 @@ public class Configuration {
 		obj = new JSONObject();
 		insertKeysValues();
 		jsonToFile(fileName);
-		obj = null;
 	}
 	
 	/**
@@ -154,10 +123,12 @@ public class Configuration {
 			fileToJson(fileName);
 		} catch (FileNotFoundException e) {
 			generateNewConfigFile(fileName);
+			obj = null;
 		}
 	}
 	
 	private void fileToJson(String path) throws FileNotFoundException {
+		//TODO gérer les exceptions
 		if(path.endsWith(".json") == false) path += ".json";
 		Scanner s = new Scanner(new File(path));
 		String file = "";
@@ -181,66 +152,73 @@ public class Configuration {
 	 * @return true si vérification ok, false sinon
 	 */
 	public boolean isValid() {
-		boolean b = true;
-		Field[] fields = this.getClass().getDeclaredFields();
-		try {
-			for(Field f : fields) {
-				b = b && f.get(this) != null;
+		if(obj != null) {
+			if(obj.keySet().size() == Keys.values().length) {
+				return true;
 			}
-		} catch (IllegalAccessException | IllegalArgumentException e) {
-			return false;
 		}
-		return b;
+		return false;
 	}
 	
-
-	public boolean isStartPassword(String passwordToTest) {
-		return startPassword.equals(passwordToTest);
-	}
-	
-	public boolean isStopPassword(String passwordToTest) {
-		return stopPassword.equals(passwordToTest);
-	}
-	
-	public String getBatchPath() {
-		return batchPath;
-	}
-
-	public int getAport() {
-		return appPort;
-	}
-
-	public int getRport() {
-		return rconPort;
-	}
-
-	public String getIp() {
-		return rconIp;
-	}
-
-	public String getRconPassword() {
-		return rconPassword;
-	}
-	
-	public boolean getAutoStart() {
-		return autoStart;
-	}
-	
-	public int getTimeout() {
-		return timeout;
-	}
-	
+	/**
+	 * obtenir le chemin absolue vers le fichier de configuration
+	 * @return
+	 */
 	public String getAbsolutePathConfigFile() {
 		return new File(fileName).getAbsolutePath();
 	}
 	
+	/**
+	 * obtenir le nom du fichier de configuration (filename + extension)
+	 * @return
+	 */
 	public String getFileName() {
 		String tmp = getAbsolutePathConfigFile();
 		String[] path = tmp.split(File.separator.replace("\\", "\\\\"));
 		return path[path.length - 1];
 	}
 	
+	/**
+	 * obtenir le nom de la configuration
+	 * @return
+	 */
 	public String getConfigFileName() {
 		return getFileName().replace(".json", "");
+	}
+	
+	public boolean isStartPassword(String passwordToTest) {
+		return obj.get(Keys.startPassword.toString()).equals(passwordToTest);
+	}
+	
+	public boolean isStopPassword(String passwordToTest) {
+		return obj.get(Keys.stopPassword.toString()).equals(passwordToTest);
+	}
+	
+	public String getBatchPath() {
+		return (String) obj.get(Keys.batchPath.toString());
+	}
+
+	public int getAport() {
+		return (int) obj.get(Keys.appPort.toString());
+	}
+
+	public int getRport() {
+		return (int) obj.get(Keys.rconPort.toString());
+	}
+
+	public String getIp() {
+		return (String) obj.get(Keys.rconIp.toString());
+	}
+
+	public String getRconPassword() {
+		return (String) obj.get(Keys.rconPassword.toString());
+	}
+	
+	public boolean getAutoStart() {
+		return (boolean) obj.get(Keys.autoStart.toString());
+	}
+	
+	public int getTimeout() {
+		return (int) obj.get(Keys.timeout.toString());
 	}
 }
