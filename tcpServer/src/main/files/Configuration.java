@@ -35,9 +35,9 @@ public class Configuration {
 	 * @param key cle pour laquelle il faut extraire sa valeur
 	 * @return la valeur associee a key si key existe et null sinon
 	 */
-	private Object getValueConfig(String key) {
+	public Object getValueConfig(Keys key) {
 		try {
-			return obj.get(key);
+			return obj.get(key.toString());
 		} catch (JSONException e) {
 			System.err.println("Missing parameter \"" + key + "\".");
 			return null;
@@ -49,7 +49,7 @@ public class Configuration {
 	 * @param k cle et sa valeur par defaut a ajouter si introuvable dans le fichier
 	 */
 	private void insertIfAbsent(Keys k) {
-		if(getValueConfig(k.toString()) == null) {
+		if(getValueConfig(k) == null) {
 			Object tmp = k.getDefaultValue();
 			obj.put(k.toString(), tmp.getClass().cast(tmp));
 		}
@@ -86,8 +86,8 @@ public class Configuration {
 			obj = null;
 		} else { //si les valeurs sont correctes
 			/* startPassword != stopPassword ? */
-			String start = (String) getValueConfig(Keys.startPassword.toString());
-			String stop  = (String) getValueConfig(Keys.stopPassword.toString());
+			String start = (String) getValueConfig(Keys.startPassword);
+			String stop  = (String) getValueConfig(Keys.stopPassword);
 			if(start.equals(stop)) obj = null;
 			
 			/* verifie la valeur de chaque clé independamment des autres */
@@ -184,41 +184,5 @@ public class Configuration {
 	 */
 	public String getConfigFileName() {
 		return getFileName().replace(".json", "");
-	}
-	
-	public boolean isStartPassword(String passwordToTest) {
-		return obj.get(Keys.startPassword.toString()).equals(passwordToTest);
-	}
-	
-	public boolean isStopPassword(String passwordToTest) {
-		return obj.get(Keys.stopPassword.toString()).equals(passwordToTest);
-	}
-	
-	public String getBatchPath() {
-		return (String) obj.get(Keys.batchPath.toString());
-	}
-
-	public int getAport() {
-		return (int) obj.get(Keys.appPort.toString());
-	}
-
-	public int getRport() {
-		return (int) obj.get(Keys.rconPort.toString());
-	}
-
-	public String getIp() {
-		return (String) obj.get(Keys.rconIp.toString());
-	}
-
-	public String getRconPassword() {
-		return (String) obj.get(Keys.rconPassword.toString());
-	}
-	
-	public boolean getAutoStart() {
-		return (boolean) obj.get(Keys.autoStart.toString());
-	}
-	
-	public int getTimeout() {
-		return (int) obj.get(Keys.timeout.toString());
 	}
 }

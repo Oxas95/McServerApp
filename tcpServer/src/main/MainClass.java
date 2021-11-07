@@ -3,6 +3,7 @@ package main;
 import java.io.IOException;
 
 import main.files.Configuration;
+import main.files.Keys;
 import main.frames.FrameFileGenerator;
 import main.process.TcpServer;
 import net.kronos.rkon.core.ex.AuthenticationException;
@@ -18,7 +19,7 @@ public class MainClass {
 			Configuration config = new Configuration(args[0]);
 			if(!config.isValid()) return;
 			TcpServer server = new TcpServer(config);
-			if(config.getAutoStart()) server.startServer();
+			if((boolean) config.getValueConfig(Keys.autoStart)) server.startServer();
 			while(!server.closed()) {
 				try {
 					server.connect();

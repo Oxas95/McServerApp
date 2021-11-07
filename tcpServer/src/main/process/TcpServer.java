@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import main.files.Configuration;
+import main.files.Keys;
 import net.kronos.rkon.core.Rcon;
 import net.kronos.rkon.core.ex.AuthenticationException;
 
@@ -17,8 +18,9 @@ public class TcpServer extends ProcessContainer {
 	
 	public TcpServer(Configuration config) throws IOException {
 		this.config = config;
-		server = new ServerSocket(config.getAport());
-		System.out.println("Creating TCP connection on port : " + config.getAport());
+		int appPort = (int) config.getValueConfig(Keys.appPort);
+		server = new ServerSocket(appPort);
+		System.out.println("Creating TCP connection on port : " + appPort);
 	}
 	
 	public void connect() throws IOException {
@@ -35,9 +37,9 @@ public class TcpServer extends ProcessContainer {
 	}
 	
 	private void traitement(String message) throws IOException {
-		if(config.isStartPassword(message)) {
+		if(message.equals(config.getValueConfig(Keys.startPassword))) {
 			startServer();
-		} else if(config.isStopPassword(message)) {
+		} else if(message.equals(config.getValueConfig(Keys.stopPassword))) {
 			stopServer();
 		} else if(message.equals("exit")) {
 			server.close();
@@ -48,7 +50,10 @@ public class TcpServer extends ProcessContainer {
 	
 	private void sendCmd(String cmd) {
 		try {
-			Rcon rcon = new Rcon(config.getIp(), config.getRport(), config.getRconPassword().getBytes());
+			String ipServer = (String) config.getValueConfig(Keys.rconIp);
+			int rconPort = (int) config.getValueConfig(Keys.rconPort);
+			String rconPassword = (String) config.getValueConfig(Keys.rconPassword);
+			Rcon rcon = new Rcon(ipServer, rconPort, rconPassword.getBytes());
 			rcon.command(cmd);
 			rcon.disconnect();
 		} catch(Exception e) {
@@ -59,8 +64,9 @@ public class TcpServer extends ProcessContainer {
 	
 	public void startServer() throws IOException {
 		if(process == null) {
+			String batchPath = (String) config.getValueConfig(Keys.batchPath);
 			tp = new ThreadProcess(this);
-			process = Runtime.getRuntime().exec("cmd /c start /wait " + config.getBatchPath());
+			process = Runtime.getRuntime().exec("cmd /c start /wait " + batchPath);
 			System.out.println("Server is starting");
 			tp.start();
 		}
@@ -71,9 +77,11 @@ public class TcpServer extends ProcessContainer {
 			sendCmd("stop");
 			System.out.println("Server is stopping");
 			try {
-				Thread.sleep(1000 * config.getTimeout());
+				int timeout = (int) config.getValueConfig(Keys.timeout);
+				String batchPath = (String) config.getValueConfig(Keys.batchPath);
+				Thread.sleep(1000 * timeout);
 				if(process != null) {
-					Runtime.getRuntime().exec(new String[]{ "cmd", "/c", "taskkill /fi \"WINDOWTITLE eq " + config.getBatchPath() + "*\" /t /f"});
+					Runtime.getRuntime().exec(new String[]{ "cmd", "/c", "taskkill /fi \"WINDOWTITLE eq " + batchPath + "*\" /t /f"});
 					System.out.println("Process killed");
 				}
 			} catch (Exception e) {
