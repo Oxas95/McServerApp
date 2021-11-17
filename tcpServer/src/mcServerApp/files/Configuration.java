@@ -87,9 +87,9 @@ public class Configuration {
 	 * @throws NullPointerException
 	 * @throws IOException
 	 */
-	private boolean readConfig(String fileName, boolean generateIfNotExists) throws NullPointerException, IOException {
+	public boolean readConfig(String fileName, boolean generateIfNotExists) throws NullPointerException, IOException {
 		try {
-			fileToJson(fileName);
+			fileToJson();
 		} catch (FileNotFoundException e) {
 			if(generateIfNotExists) generateNewConfigFile(fileName);
 			return false;
@@ -101,7 +101,7 @@ public class Configuration {
 		/*verification des valeurs des parametres*/
 		if(!this.isValid()) { //s'il manque des valeurs
 			insertKeysValues();
-			jsonToFile(fileName);
+			jsonToFile();
 			return false;
 		} else { //si les valeurs sont correctes
 			/* startPassword != stopPassword ? */
@@ -125,13 +125,13 @@ public class Configuration {
 	private void generateNewConfigFile(String fileName) throws NullPointerException, IOException {
 		obj = new JSONObject();
 		insertKeysValues();
-		jsonToFile(fileName);
+		jsonToFile();
 	}
 	
-	private void fileToJson(String path) throws FileNotFoundException {
+	private void fileToJson() throws FileNotFoundException {
 		//TODO gérer les exceptions
-		if(path.endsWith(".json") == false) path += ".json";
-		Scanner s = new Scanner(new File(path));
+		if(fileName.endsWith(".json") == false) fileName += ".json";
+		Scanner s = new Scanner(new File(fileName));
 		String file = "";
 		while(s.hasNext()) {
     		file += s.nextLine();
@@ -140,16 +140,17 @@ public class Configuration {
     	obj = new JSONObject(file);
 	}
 	
-	private void jsonToFile(String fileName) throws IOException, NullPointerException {
+	public void jsonToFile() throws IOException, NullPointerException {
     	if(fileName == null) throw new NullPointerException ();
 		if(fileName.endsWith(".json") == false) fileName += ".json";
-        OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(fileName));
+        OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(getAbsolutePathConfigFile()));
         fw.write(obj.toString(4));
         fw.close();
+        System.out.println("config file saved at " + getAbsolutePathConfigFile());
     }
 	
 	/**
-	 * Vérifie si l'objet JSON et chaque clé contient une valeur
+	 * Vérifie si l'objet JSON et chaque clé contient une valeur valide
 	 * @return true si vérification ok, false sinon
 	 */
 	public boolean isValid() {
@@ -191,5 +192,10 @@ public class Configuration {
 	 */
 	public String getConfigFileName() {
 		return getFileName().replace(".json", "");
+	}
+	
+	public void setFileName(String newFileName) {
+		fileName = newFileName;
+		obj = null;
 	}
 }

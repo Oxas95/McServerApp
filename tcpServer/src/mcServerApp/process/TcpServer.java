@@ -9,7 +9,6 @@ import java.net.Socket;
 import mcServerApp.files.Configuration;
 import mcServerApp.files.Keys;
 import net.kronos.rkon.core.Rcon;
-import net.kronos.rkon.core.ex.AuthenticationException;
 
 public class TcpServer extends ProcessContainer {
 	private ServerSocket server;
@@ -50,7 +49,7 @@ public class TcpServer extends ProcessContainer {
 	
 	private void sendCmd(String cmd) {
 		try {
-			String ipServer = (String) config.getValueConfig(Keys.rconIp);
+			String ipServer = "127.0.0.1";
 			int rconPort = (int) config.getValueConfig(Keys.rconPort);
 			String rconPassword = (String) config.getValueConfig(Keys.rconPassword);
 			Rcon rcon = new Rcon(ipServer, rconPort, rconPassword.getBytes());

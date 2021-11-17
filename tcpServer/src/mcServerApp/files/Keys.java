@@ -3,8 +3,6 @@ package mcServerApp.files;
 import java.io.File;
 import java.math.BigDecimal;
 
-import org.json.JSONObject;
-
 public enum Keys {
 	appPort("app port", 0) {
 		@Override
@@ -21,10 +19,8 @@ public enum Keys {
 	autoStart("starts by launching the server", false) {
 		@Override
 		public boolean check(Object value) {
-			if(value.toString() == Boolean.TRUE.toString() || value.toString() == Boolean.FALSE.toString()) {
-				if(value.getClass() == Boolean.class || value.getClass() == boolean.class)
-					return true;
-			}
+			if(value.getClass() == Boolean.class || value.getClass() == boolean.class)
+				return true;
 			return false;
 		}
 	},
@@ -34,14 +30,6 @@ public enum Keys {
 			if(value.getClass() == String.class) {
 				File f = new File((String) value);
 				return f.exists();
-			} else return false;
-		}
-	},
-	rconIp("rcon ip", Configuration.none) {
-		@Override
-		public boolean check(Object value) {
-			if(value.getClass() == String.class) {
-				return !((String) value).isEmpty();
 			} else return false;
 		}
 	},
@@ -77,7 +65,7 @@ public enum Keys {
 			if(Number.class.isInstance(value)) {
 				//verifier que c'est un nombre entier en utilisant le type double
 				Double doubleValue = new BigDecimal(value + "").doubleValue();
-				if(doubleValue >= 0 && doubleValue <= 15 * 60)
+				if(doubleValue >= 0 && doubleValue <= 15 * 60 && doubleValue % 1 == 0)
 					return true;
 			}
 			return false;
