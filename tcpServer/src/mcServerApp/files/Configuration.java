@@ -12,7 +12,7 @@ import org.json.JSONObject;
 
 public class Configuration {
 	
-	private JSONObject obj = null;
+	private JSONObject obj;
 	private String fileName;
 	//TODO parametre nogui
 
@@ -21,14 +21,20 @@ public class Configuration {
 	 */
 	public static String none = "";
 	
-	public Configuration(String fileName) {
+	public Configuration(String fileName, boolean generateIfNotExists) {
 		this.fileName = fileName.replace("/", File.separator);
 		try {
-			readConfig(fileName);
+			readConfig(fileName, generateIfNotExists);
 		} catch (NullPointerException | IOException e) {
 			System.err.println("Unable to load configuration");
 		}
 	}
+	
+	public Configuration(String fileName) {
+		this(fileName, true);
+	}
+	
+	public Configuration() {}
 
 	/**
 	 * recuperer la valeur du fichier de configuration JSON
@@ -41,9 +47,6 @@ public class Configuration {
 		} catch (JSONException e) {
 			System.err.println("Missing parameter \"" + key + "\".");
 			return null;
-		} catch (NullPointerException e) {
-			e.printStackTrace();
-			return null;
 		}
 	}
 	
@@ -53,27 +56,17 @@ public class Configuration {
 	 * @param value nouvelle valeur
 	 */
 	public void setValueConfig(Keys key, Object value) {
-		try {
-			Object last = obj.get(key.toString());
+		if(key.check(value) && getValueConfig(key) != null)
 			obj.put(key.toString(), value);
-			if(!key.check(obj)) {
-				obj.put(key.toString(), value);
-			}
-		} catch (JSONException e) {
-			System.err.println("Missing parameter \"" + key + "\".");
-		} catch (NullPointerException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	/**
-	 * verifie la presence d’une valeur dans le fichier de configuration et l’ajoute si elle est  introuvable
+	 * verifie la presence d’une valeur dans le fichier de configuration et l’ajoute si elle est introuvable
 	 * @param k cle et sa valeur par defaut a ajouter si introuvable dans le fichier
 	 */
 	private void insertIfAbsent(Keys k) {
 		if(getValueConfig(k) == null) {
-			Object tmp = k.getDefaultValue();
-			obj.put(k.toString(), tmp.getClass().cast(tmp));
+			obj.put(k.toString(), k.getDefaultValue());
 		}
 	}
 	
@@ -90,37 +83,36 @@ public class Configuration {
 	 * lecture du fichier et stockage des valeurs lues dans les champs de la classe Configuration
 	 * ajoute les cles manquantes dans le fichier de configuration et ne lance pas le serveur
 	 * @param fileName chemin vers le fichier de configuration
+	 * @param generateIfNotExists generera un fichier de configuration s'il n'existait pas
 	 * @throws NullPointerException
 	 * @throws IOException
 	 */
-	private void readConfig(String fileName) throws NullPointerException, IOException {
-		readFile(fileName);
-		if(obj == null) { //le fichier de configuration n'existe pas
-			System.out.println("New file configuration is created");
-			System.out.println("Edit the generated file and re-run this app");
-			return;
+	private boolean readConfig(String fileName, boolean generateIfNotExists) throws NullPointerException, IOException {
+		try {
+			fileToJson(fileName);
+		} catch (FileNotFoundException e) {
+			if(generateIfNotExists) generateNewConfigFile(fileName);
+			return false;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
 		}
 		
 		/*verification des valeurs des parametres*/
 		if(!this.isValid()) { //s'il manque des valeurs
 			insertKeysValues();
 			jsonToFile(fileName);
-			obj = null;
+			return false;
 		} else { //si les valeurs sont correctes
 			/* startPassword != stopPassword ? */
 			String start = (String) getValueConfig(Keys.startPassword);
 			String stop  = (String) getValueConfig(Keys.stopPassword);
-			if(start.equals(stop)) obj = null;
+			if(start.equals(stop)) return false;
 			
 			/* Modification du separateur  si besoin dans batchPath */
 			setValueConfig(Keys.batchPath, ((String) getValueConfig(Keys.batchPath)).replace("/", File.separator));
 			
-			/* verifie la valeur de chaque clé independamment des autres */
-			Keys[] keys = Keys.values();
-			for(int i = 0; i < keys.length && obj != null; i++) {
-				if(!keys[i].check(obj)) obj = null;
-			}
-			
+			return true;
 		}
 	}
 	
@@ -134,22 +126,6 @@ public class Configuration {
 		obj = new JSONObject();
 		insertKeysValues();
 		jsonToFile(fileName);
-	}
-	
-	/**
-	 * lit le fichier de configuration JSON et stocke les donnees dans obj.
-	 * genere le fichier de configuration s’il n’existe pas
-	 * @param fileName chemin vers le fichier
-	 * @throws NullPointerException
-	 * @throws IOException
-	 */
-	private void readFile(String fileName) throws NullPointerException, IOException {
-		try {
-			fileToJson(fileName);
-		} catch (FileNotFoundException e) {
-			generateNewConfigFile(fileName);
-			obj = null;
-		}
 	}
 	
 	private void fileToJson(String path) throws FileNotFoundException {
@@ -177,12 +153,15 @@ public class Configuration {
 	 * @return true si vérification ok, false sinon
 	 */
 	public boolean isValid() {
-		if(obj != null) {
+		if(obj != null && fileName != null) {
 			if(obj.keySet().size() == Keys.values().length) {
 				Keys[] keys = Keys.values();
 				for(Keys k : keys) {
-					if(!k.check(obj));
+					if(!k.check(getValueConfig(k))) {
+						return false;
+					}
 				}
+				return true;
 			}
 		}
 		return false;
