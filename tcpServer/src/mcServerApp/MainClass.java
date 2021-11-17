@@ -2,10 +2,10 @@ package mcServerApp;
 
 import java.io.IOException;
 
-import main.files.Configuration;
-import main.files.Keys;
-import main.frames.FrameFileGenerator;
-import main.process.TcpServer;
+import mcServerApp.files.Configuration;
+import mcServerApp.files.Keys;
+import mcServerApp.frames.FrameFileGenerator;
+import mcServerApp.process.TcpServer;
 import net.kronos.rkon.core.ex.AuthenticationException;
 
 public class MainClass {
