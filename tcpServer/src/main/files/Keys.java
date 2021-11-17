@@ -1,6 +1,7 @@
 package main.files;
 
 import java.io.File;
+import java.math.BigDecimal;
 
 import org.json.JSONObject;
 
@@ -11,8 +12,8 @@ public enum Keys {
 			Object value = obj.get(this.toString());
 			if(Number.class.isInstance(value)) {
 				//verifier que c'est un nombre entier en utilisant le type double
-				Double intValue = (Double) value;
-				if(intValue > 1000 && intValue < 65535)
+				Double doubleValue = new BigDecimal(value + "").doubleValue();
+				if(doubleValue > 1000 && doubleValue < 65535)
 					return true;
 			}
 			return false;
@@ -65,8 +66,8 @@ public enum Keys {
 			Object value = obj.get(this.toString());
 			if(Number.class.isInstance(value)) {
 				//verifier que c'est un nombre entier en utilisant le type double
-				Double intValue = (Double) value;
-				if(intValue > 1000 && intValue < 65535)
+				Double doubleValue = new BigDecimal(value + "").doubleValue();
+				if(doubleValue > 1000 && doubleValue < 65535)
 					return true;
 			}
 			return false;
@@ -96,8 +97,8 @@ public enum Keys {
 			Object value = obj.get(this.toString());
 			if(Number.class.isInstance(value)) {
 				//verifier que c'est un nombre entier en utilisant le type double
-				Double intValue = (Double) value;
-				if(intValue > -1 && intValue <= 15 * 60)
+				Double doubleValue = new BigDecimal(value + "").doubleValue();
+				if(doubleValue > -1 && doubleValue <= 15 * 60)
 					return true;
 			}
 			return false;

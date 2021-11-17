@@ -1,4 +1,4 @@
-package main;
+package mcServerApp;
 
 import java.io.IOException;
 

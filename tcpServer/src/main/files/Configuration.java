@@ -19,7 +19,7 @@ public class Configuration {
 	/**
 	 * Valeur par defaut des champs de type String (utilise dans l’enum Keys)
 	 */
-	public static String none = "not set";
+	public static String none = "";
 	
 	public Configuration(String fileName) {
 		this.fileName = fileName.replace("/", File.separator);
@@ -40,6 +40,9 @@ public class Configuration {
 			return obj.get(key.toString());
 		} catch (JSONException e) {
 			System.err.println("Missing parameter \"" + key + "\".");
+			return null;
+		} catch (NullPointerException e) {
+			System.err.println(key);
 			return null;
 		}
 	}
