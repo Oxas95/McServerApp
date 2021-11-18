@@ -4,32 +4,25 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 
-//import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import mcServerApp.files.Keys;
 
 class KeysTest {
 
-	String batchPath = "testFile.txt";
+	/* conservee pour exemple
 	
 	@BeforeEach
 	void setUp() throws Exception {
-		
-		/* tests batchPath */
-		File file = new File(batchPath);
-		if(!file.exists()) {
-			file.createNewFile();
-			file.deleteOnExit();
-		}
 	}
-
-	/* conservee pour exemple
+	
 	@AfterEach
 	void tearDown() throws Exception {
-	}*/
+	}
+	
+	*/
 	
 	private void testValueWithBounds(Keys k, int inf, int sup) {
 		/* test des bornes superieur et inferieur */
@@ -58,10 +51,22 @@ class KeysTest {
 	}
 	
 	private void testExistingFile(Keys k) {
+		final String batchPath = "testFile.txt";
+		File file = new File(batchPath);
+		if(!file.exists()) {
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			file.deleteOnExit();
+		}
+		
 		assertFalse(k.check(""));
 		assertFalse(k.check(k));
 		assertTrue(k.check(batchPath));
 		assertFalse(k.check("../../../../../../../../../../../../../../../../../a".replace("/", File.separator)));
+		assertFalse(k.check("src"));
 	}
 	
 	@Test

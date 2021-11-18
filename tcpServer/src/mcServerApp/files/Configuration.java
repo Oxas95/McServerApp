@@ -94,7 +94,7 @@ public class Configuration {
 			if(generateIfNotExists) generateNewConfigFile(fileName);
 			return false;
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.err.println("Unable to read the file \"" + getAbsolutePathConfigFile() + "\"");
 			return false;
 		}
 		
@@ -104,10 +104,6 @@ public class Configuration {
 			jsonToFile();
 			return false;
 		} else { //si les valeurs sont correctes
-			/* startPassword != stopPassword ? */
-			String start = (String) getValueConfig(Keys.startPassword);
-			String stop  = (String) getValueConfig(Keys.stopPassword);
-			if(start.equals(stop)) return false;
 			
 			/* Modification du separateur  si besoin dans batchPath */
 			setValueConfig(Keys.batchPath, ((String) getValueConfig(Keys.batchPath)).replace("/", File.separator));
@@ -162,6 +158,12 @@ public class Configuration {
 						return false;
 					}
 				}
+				
+				/* startPassword != stopPassword ? */
+				String start = (String) getValueConfig(Keys.startPassword);
+				String stop  = (String) getValueConfig(Keys.stopPassword);
+				if(start.equals(stop)) return false;
+				
 				return true;
 			}
 		}

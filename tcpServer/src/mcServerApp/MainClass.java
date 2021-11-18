@@ -15,6 +15,7 @@ public class MainClass {
 			//System.err.println("Arguments required to launch : <config file>");
 			//System.exit(1);
 			FrameFileGenerator fg = new FrameFileGenerator();
+			fg.setVisible(true);
 		} else {
 			Configuration config = new Configuration(args[0]);
 			if(!config.isValid()) return;

@@ -29,7 +29,7 @@ public enum Keys {
 		public boolean check(Object value) {
 			if(value.getClass() == String.class) {
 				File f = new File((String) value);
-				return f.exists();
+				return f.exists() && f.isFile();
 			} else return false;
 		}
 	},

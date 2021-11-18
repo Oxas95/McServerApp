@@ -17,7 +17,6 @@ public abstract class IFrame extends JFrame implements ActionListener {
 		build();
 		addContent();
 		addListeners();
-		this.setVisible(true);
 	}
 	
 	/**
