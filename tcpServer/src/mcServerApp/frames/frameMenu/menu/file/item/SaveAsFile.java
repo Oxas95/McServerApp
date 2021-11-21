@@ -10,6 +10,5 @@ public class SaveAsFile extends JMenuItem {
 		setIcon(new ImageIcon("resources/icons/save_as.png"));
 		setMnemonic('A');
 		setName(getText());
-		setEnabled(false);
 	}
 }

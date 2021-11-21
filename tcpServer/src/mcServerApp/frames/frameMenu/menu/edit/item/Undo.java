@@ -10,7 +10,7 @@ public class Undo extends JMenuItem {
 
 	public Undo() {
 		super("Undo");
-		setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_U, KeyEvent.CTRL_DOWN_MASK));
+		setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK));
 		setIcon(new ImageIcon("resources/icons/undo.png"));
 		setMnemonic('U');
 		setName(getText());

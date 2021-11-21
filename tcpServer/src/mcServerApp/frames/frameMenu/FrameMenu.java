@@ -2,10 +2,13 @@ package mcServerApp.frames.frameMenu;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -13,6 +16,8 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import mcServerApp.files.Configuration;
 import mcServerApp.files.Keys;
@@ -20,11 +25,19 @@ import mcServerApp.frames.FileChooser;
 import mcServerApp.frames.IFrame;
 import mcServerApp.frames.frameMenu.menu.Menu;
 import mcServerApp.frames.frameMenu.menu.edit.Edit;
+import mcServerApp.frames.frameMenu.menu.edit.item.Redo;
+import mcServerApp.frames.frameMenu.menu.edit.item.Undo;
+import mcServerApp.frames.frameMenu.menu.file.item.CloseFile;
+import mcServerApp.frames.frameMenu.menu.file.item.Exit;
+import mcServerApp.frames.frameMenu.menu.file.item.NewFile;
+import mcServerApp.frames.frameMenu.menu.file.item.OpenFile;
+import mcServerApp.frames.frameMenu.menu.file.item.SaveAsFile;
+import mcServerApp.frames.frameMenu.menu.file.item.SaveFile;
 import mcServerApp.frames.frameMenu.menu.help.Help;
 
 public class FrameMenu extends IFrame {
 	//TODO petit menu pour le fichier de configuration (create, save as...)
-	//un bouton launch pour lancer avec la configuration chargée
+	//un bouton launch pour lancer avec la configuration chargee
 	//un bouton pour générer un batch
 	
 	/**
@@ -38,6 +51,9 @@ public class FrameMenu extends IFrame {
 	private ArrayList<JMenuItem> menuItem;
 	private Map<Keys, JTextField> textFields;
 	private Map<Keys, JLabel> labels;
+	private Stack<Map<Keys, String>> undo;
+	private Stack<Map<Keys, String>> redo;
+	private Map<Keys, String> cache;
 	
 	private File configFile = null;
 	private boolean isNewFile;
@@ -57,6 +73,9 @@ public class FrameMenu extends IFrame {
 		menuItem = new ArrayList<JMenuItem>();
 		textFields = new HashMap<Keys, JTextField>();
 		labels = new HashMap<Keys, JLabel>();
+		
+		undo = new Stack<Map<Keys, String>>();
+		redo = new Stack<Map<Keys, String>>();
 		
 		isNewFile = false;
 	}
@@ -84,12 +103,14 @@ public class FrameMenu extends IFrame {
 		}
 		
 		this.setJMenuBar(menuBar);
+		
+		refreshComponentStatut();
 	}
 	
 	protected void addContentMenu() {
 		ArrayList<Menu> menus = new ArrayList<Menu>();
 		menus.add(new mcServerApp.frames.frameMenu.menu.file.File());
-		menus.add(new Edit());
+		//menus.add(new Edit());
 		menus.add(new Help());
 		
 		for(Menu m : menus) {
@@ -102,6 +123,22 @@ public class FrameMenu extends IFrame {
 	protected void addListeners() {
 		for(JMenuItem mi : menuItem)
 			mi.addActionListener(this);
+		for(Keys k : Keys.values()) {
+			textFields.get(k).getDocument().addDocumentListener(new DocumentListener() {
+				public void insertUpdate(DocumentEvent e) {
+					System.out.println("i");
+					DocumentEvent.ElementChange lineChange = e.getChange(e.getDocument().getDefaultRootElement());
+					System.out.println(lineChange);
+				}
+				public void changedUpdate(DocumentEvent e) {
+					System.out.println("c");
+				}
+				public void removeUpdate(DocumentEvent e) {
+					System.out.println("r");
+				}
+			});
+		}
+		actionSaveHistory();
 	}
 
 	@Override
@@ -113,6 +150,8 @@ public class FrameMenu extends IFrame {
 		actionSave(source);
 		actionSaveAs(source);
 		actionExit(source);
+		actionUndo(source);
+		actionRedo(source);
 		
 		refreshComponentStatut();
 	}
@@ -120,10 +159,8 @@ public class FrameMenu extends IFrame {
 	private void refreshComponentStatut() {
 		//activer ou desactiver les composants de la fenetre si un fichier est ouvert ou non
 		boolean fileOpened = isNewFile || ((configFile != null) ? configFile.exists() : false);
-		Keys[] keys = Keys.values();
-		for(Keys k : keys) {
+		for(Keys k : Keys.values()) {
 			JTextField tf = textFields.get(k);
-			if(!fileOpened || isNewFile) tf.setText("");
 			tf.setEnabled(fileOpened);
 			labels.get(k).setEnabled(fileOpened);
 		}
@@ -131,7 +168,11 @@ public class FrameMenu extends IFrame {
 		getMenuItemByName("Save").setEnabled(fileOpened);
 		getMenuItemByName("Save As").setEnabled(fileOpened);
 		
-		//definir le titre de la fenetre
+		//undo et redo
+		getMenuItemByName("Undo").setEnabled(!undo.isEmpty());
+		getMenuItemByName("Redo").setEnabled(!redo.isEmpty());
+		
+		//redefinir le titre de la fenetre
 		if(isNewFile) {
 			this.setTitle(titleBase + " : New File");
 		} else if (configFile != null && configFile.exists()) {
@@ -153,26 +194,35 @@ public class FrameMenu extends IFrame {
 	}
 	
 	private void actionNewFile(Object source) {
-		JMenuItem menuItem = getMenuItemByName("New File");
-		if(source == menuItem) {
+		if(source.getClass() == NewFile.class) {
 			isNewFile = true;
 			configFile = null;
+			undo = new Stack<Map<Keys, String>>();
+			redo = new Stack<Map<Keys, String>>();
+			cache = new HashMap<Keys, String>();
+			for(Keys k : Keys.values()) {
+				textFields.get(k).setText("");
+				cache.put(k, "");
+			}
 		}
 	}
 	
 	private void actionOpenFile(Object source) {
-		JMenuItem menuItem = getMenuItemByName("Open File");
-		if(source == menuItem) {
+		if(source.getClass() == OpenFile.class) {
 			FileChooser fc = FileChooser.getInstance();
 			String openFilePath = fc.selectOpenFilePath(System.getProperty("user.dir"));
 			if(openFilePath != null) {
 				isNewFile = false;
 				configFile = new File(openFilePath);
 				if(configFile.exists()) {
+					undo = new Stack<Map<Keys, String>>();
+					redo = new Stack<Map<Keys, String>>();
+					cache = new HashMap<Keys, String>();
 					Configuration cfg = new Configuration(configFile.getAbsolutePath());
 					Keys[] keys = Keys.values();
 					for(Keys k : keys) {
 						textFields.get(k).setText("" + cfg.getValueConfig(k));
+						cache.put(k, "" + cfg.getValueConfig(k));
 					}
 				}
 			}
@@ -180,16 +230,17 @@ public class FrameMenu extends IFrame {
 	}
 	
 	private void actionCloseFile(Object source) {
-		JMenuItem menuItem = getMenuItemByName("Close File");
-		if(source == menuItem) {
+		if(source.getClass() == CloseFile.class) {
 			isNewFile = false;
 			configFile = null;
+			cache = null;
+			undo = new Stack<Map<Keys, String>>();
+			redo = new Stack<Map<Keys, String>>();
 		}
 	}
 
 	private void actionSave(Object source) {
-		JMenuItem menuItem = getMenuItemByName("Save");
-		if(source == menuItem) {
+		if(source.getClass() == SaveFile.class) {
 			if(isNewFile) {
 				actionSaveAs(getMenuItemByName("Save As"));
 			} else {
@@ -199,8 +250,7 @@ public class FrameMenu extends IFrame {
 	}
 	
 	private void actionSaveAs(Object source) {
-		JMenuItem menuItem = getMenuItemByName("Save As");
-		if(source == menuItem) {
+		if(source.getClass() == SaveAsFile.class) {
 			FileChooser fc = FileChooser.getInstance();
 			configFile = new File(fc.selectNewFilePath(System.getProperty("user.dir")));
 			if(configFile.exists()) {
@@ -210,9 +260,60 @@ public class FrameMenu extends IFrame {
 	}
 	
 	private void actionExit(Object source) {
-		JMenuItem menuItem = getMenuItemByName("Exit");
-		if(source == menuItem) {
+		if(source.getClass() == Exit.class) {
 			System.exit(0);
+		}
+	}
+
+	private void actionSaveHistory() {
+		for(Keys k : Keys.values()) {
+			textFields.get(k).addActionListener(new ActionListener() {
+				//capturer un événement sur le JTextField
+				public void actionPerformed(ActionEvent e) {
+					Map<Keys, String> history = new HashMap<Keys, String>();
+					for(Keys k : Keys.values())
+						history.put(k, textFields.get(k).getText());
+					undo.push(cache);
+					cache = history;
+					redo = new Stack<Map<Keys, String>>();
+					refreshComponentStatut();
+				}
+			});
+		}
+	}
+	
+	/**
+	 * s1 => s2
+	 * @param s1 pile à poper
+	 * @param s2 pile à pusher
+	 */
+	private void actionUndoRedo(Stack<Map<Keys, String>> s1, Stack<Map<Keys, String>> s2) {
+		Map<Keys, String> clone = new HashMap<Keys, String>();
+		for(Keys k : Keys.values()) {
+			clone.put(k, textFields.get(k).getText());
+		}
+		s2.push(clone);
+		try {
+			clone = s1.pop();
+			for(Keys k : Keys.values()) {
+				textFields.get(k).setText(clone.get(k));
+				cache = clone;
+			}
+		} catch (EmptyStackException e) {
+			e.printStackTrace();
+			s2.pop();
+		}
+	}
+	
+	private void actionUndo(Object source) {
+		if(source.getClass() == Undo.class) {
+			actionUndoRedo(undo, redo);
+		}
+	}
+	
+	private void actionRedo(Object source) {
+		if(source.getClass() == Redo.class) {
+			actionUndoRedo(redo, undo);
 		}
 	}
 }

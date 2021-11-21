@@ -13,6 +13,5 @@ public class CloseFile extends JMenuItem {
 		//currentMenuItem.setIcon(new ImageIcon("resources/icons/close.png"));
 		setMnemonic('C');
 		setName(getText());
-		setEnabled(false);
 	}
 }
