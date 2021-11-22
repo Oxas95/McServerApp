@@ -4,6 +4,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EmptyStackException;
 import java.util.HashMap;
@@ -14,14 +15,17 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import mcServerApp.files.Configuration;
+import mcServerApp.files.InvalidKeysValueException;
 import mcServerApp.files.Keys;
 import mcServerApp.frames.FileChooser;
+import mcServerApp.frames.FrameDialog;
 import mcServerApp.frames.IFrame;
 import mcServerApp.frames.frameMenu.menu.Menu;
 import mcServerApp.frames.frameMenu.menu.edit.Edit;
@@ -173,8 +177,7 @@ public class FrameMenu extends IFrame {
 	
 	private void actionOpenFile(Object source) {
 		if(source.getClass() == OpenFile.class) {
-			FileChooser fc = FileChooser.getInstance();
-			String openFilePath = fc.selectOpenFilePath(System.getProperty("user.dir"));
+			String openFilePath = FileChooser.selectOpenFilePath(System.getProperty("user.dir"));
 			if(openFilePath != null) {
 				isNewFile = false;
 				configFile = new File(openFilePath);
@@ -195,23 +198,60 @@ public class FrameMenu extends IFrame {
 			configFile = null;
 		}
 	}
+	
+	private void writeConfig(Configuration cfg) {
+		String errorMessage = null;
+		try {
+			for(Keys k : Keys.values()) {
+				errorMessage = "The value for the <" + k.toString() + "> field is invalid";
+				Object value = k.parse(textFields.get(k).getText());
+				if(!k.check(value)) {
+					FrameDialog.error(this, "Warning", errorMessage);
+					return;
+				}
+				cfg.setValueConfig(k, value);
+			}
+			cfg.jsonToFile();
+			this.configFile = new File(cfg.getAbsolutePathConfigFile());
+			isNewFile = false;
+		} catch (NullPointerException | IOException e) {
+			e.printStackTrace();
+			FrameDialog.errorSave(this);
+		} catch (InvalidKeysValueException e) {
+			FrameDialog.error(this, "Warning", errorMessage);
+			return;
+		}
+	}
+	
+	private void save(boolean confirmOverwrite, File configFile) {
+		Configuration cfg = new Configuration(configFile.getAbsolutePath(), false);
+		if(configFile.exists() && confirmOverwrite) {
+			Integer res;
+			res = FrameDialog.confirmOverwrite(this, cfg.getFileName());
+			if(res == JOptionPane.YES_OPTION) {
+				writeConfig(cfg);
+			}
+		} else
+			writeConfig(cfg);
+	}
 
 	private void actionSave(Object source) {
 		if(source.getClass() == SaveFile.class) {
 			if(isNewFile) {
 				actionSaveAs(getMenuItemByName("Save As"));
 			} else {
-				
+				save(false, this.configFile);
 			}
 		}
 	}
 	
 	private void actionSaveAs(Object source) {
 		if(source.getClass() == SaveAsFile.class) {
-			FileChooser fc = FileChooser.getInstance();
-			configFile = new File(fc.selectNewFilePath(System.getProperty("user.dir")));
-			if(configFile.exists()) {
-				
+			String path = FileChooser.selectNewFilePath(System.getProperty("user.dir"));
+			File configFile = null;
+			if(path != null) {
+				configFile = new File(path);
+				save(true, configFile);
 			}
 		}
 	}

@@ -25,8 +25,8 @@ public class MainClass {
 				try {
 					server.connect();
 				} catch (Exception e) {
-					System.err.println("An error occurred during the connection attempt :");
-					e.printStackTrace();
+					System.err.println("An error occurred during the connection attempt.");
+					//e.printStackTrace();
 				}
 			}
 			server.stopServer();

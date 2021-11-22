@@ -15,6 +15,15 @@ public enum Keys {
 			}
 			return false;
 		}
+
+		@Override
+		public Object parse(String value) throws InvalidKeysValueException {
+			try {
+				return Integer.parseInt(value);
+			} catch (Exception e) {
+				throw new InvalidKeysValueException(value, this);
+			}
+		}
 	},
 	autoStart("starts by launching the server", false) {
 		@Override
@@ -22,6 +31,15 @@ public enum Keys {
 			if(value.getClass() == Boolean.class || value.getClass() == boolean.class)
 				return true;
 			return false;
+		}
+
+		@Override
+		public Object parse(String value) throws InvalidKeysValueException {
+			try {
+				return Boolean.parseBoolean(value);
+			} catch (Exception e) {
+				throw new InvalidKeysValueException(value, this);
+			}
 		}
 	},
 	batchPath("batch path", Configuration.none) {
@@ -32,6 +50,11 @@ public enum Keys {
 				return f.exists() && f.isFile();
 			} else return false;
 		}
+
+		@Override
+		public Object parse(String value) {
+			return value;
+		}
 	},
 	rconPassword("rcon password", Configuration.none) {
 		@Override
@@ -40,11 +63,25 @@ public enum Keys {
 				return ((String) value).length() > 7;
 			} else return false;
 		}
+
+		@Override
+		public Object parse(String value) {
+			return value;
+		}
 	},
 	rconPort("rcon port", 0) {
 		@Override
 		public boolean check(Object value) {
 			return Keys.appPort.check(value);
+		}
+
+		@Override
+		public Object parse(String value) throws InvalidKeysValueException {
+			try {
+				return Integer.parseInt(value);
+			} catch (Exception e) {
+				throw new InvalidKeysValueException(value, this);
+			}
 		}
 	},
 	startPassword("server start password", Configuration.none) {
@@ -52,11 +89,21 @@ public enum Keys {
 		public boolean check(Object value) {
 			return Keys.rconPassword.check(value);
 		}
+
+		@Override
+		public Object parse(String value) {
+			return value;
+		}
 	},
 	stopPassword("server stop password", Configuration.none) {
 		@Override
 		public boolean check(Object value) {
 			return Keys.rconPassword.check(value);
+		}
+
+		@Override
+		public Object parse(String value) {
+			return value;
 		}
 	},
 	timeout("time in second before killing the server", 60) {
@@ -69,6 +116,15 @@ public enum Keys {
 					return true;
 			}
 			return false;
+		}
+
+		@Override
+		public Object parse(String value) throws InvalidKeysValueException {
+			try {
+				return Integer.parseInt(value);
+			} catch (Exception e) {
+				throw new InvalidKeysValueException(value, this);
+			}
 		}
 	};
 
@@ -90,4 +146,6 @@ public enum Keys {
 	
 	/** les valeurs sont supposes etre non nuls */
 	public abstract boolean check(Object value);
+	
+	public abstract Object parse(String value) throws InvalidKeysValueException;
 }

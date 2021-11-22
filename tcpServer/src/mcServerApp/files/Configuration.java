@@ -28,6 +28,9 @@ public class Configuration {
 		} catch (NullPointerException | IOException e) {
 			System.err.println("Unable to load configuration");
 		}
+		if(obj == null) {
+			obj = new JSONObject();
+		}
 	}
 	
 	public Configuration(String fileName) {
@@ -56,8 +59,7 @@ public class Configuration {
 	 * @param value nouvelle valeur
 	 */
 	public void setValueConfig(Keys key, Object value) {
-		if(key.check(value) && getValueConfig(key) != null)
-			obj.put(key.toString(), value);
+		obj.put(key.toString(), value);
 	}
 	
 	/**

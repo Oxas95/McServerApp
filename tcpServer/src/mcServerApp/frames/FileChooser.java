@@ -5,25 +5,16 @@ import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-public class FileChooser {
-	
-	private static FileChooser fc = null;
+public abstract class FileChooser {
 	
 	private void FileChooser() {}
-	
-	public static FileChooser getInstance() {
-		if(fc == null) {
-			fc = new FileChooser();
-		}
-		return fc;
-	}
 	
 	/**
 	 * Selectionner un chemin pour un nouveau fichier
 	 * @param from ouvrir l'explorateur de fichier sur from
 	 * @return le chemin et le nom du fichier choisi, null sinon
 	 */
-	public String selectNewFilePath(String from) {
+	public static String selectNewFilePath(String from) {
 		JFileChooser chooser = new JFileChooser();
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("Json files", "json");
 		chooser.setFileFilter(filter);
@@ -41,7 +32,7 @@ public class FileChooser {
 	 * @param from ouvrir l'explorateur de fichier sur from
 	 * @return le chemin et le nom du fichier choisi, null sinon
 	 */
-	public String selectOpenFilePath(String from) {
+	public static String selectOpenFilePath(String from) {
 		JFileChooser chooser = new JFileChooser();
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("Json files", "json");
 		chooser.setFileFilter(filter);

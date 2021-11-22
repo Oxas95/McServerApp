@@ -76,8 +76,7 @@ public class FrameFileGenerator extends IFrame implements ActionListener{
 	
 	private void actionChooseConfigPath(Object source) {
 		if(source == chooseConfigPath) {
-			FileChooser fc = FileChooser.getInstance();
-			String path = fc.selectNewFilePath(System.getProperty("user.dir"));
+			String path = FileChooser.selectNewFilePath(System.getProperty("user.dir"));
 			if(path != null) {
 				text.setText(path + ".json");
 			}
