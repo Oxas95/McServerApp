@@ -46,7 +46,7 @@ public enum Keys {
 		@Override
 		public boolean check(Object value) {
 			if(value.getClass() == String.class) {
-				File f = new File((String) value);
+				File f = new File(((String) value).replace("/", File.separator));
 				return f.exists() && f.isFile();
 			} else return false;
 		}

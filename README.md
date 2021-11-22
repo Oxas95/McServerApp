@@ -8,4 +8,6 @@ En lien avec : https://glitch.com/~mcserverapp
 
 # Librairies requises pour build à ajouter dans le *build path*
 https://mvnrepository.com/artifact/org.json/json/20140107  
-https://github.com/Kronos666/rkon-core
+https://github.com/Kronos666/rkon-core  
+https://commons.apache.org/proper/commons-io/download_io.cgi  
+Junit 5
