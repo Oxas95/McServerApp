@@ -5,6 +5,10 @@ import javax.swing.JOptionPane;
 
 public abstract class FrameDialog {
 
+	public static void info(JFrame frame, String title, String message) {
+		JOptionPane.showMessageDialog(frame, message, title, JOptionPane.INFORMATION_MESSAGE);
+	}
+	
 	public static int confirm(JFrame frame, String title, String message) {
 		return JOptionPane.showConfirmDialog(frame, message, title, JOptionPane.YES_NO_OPTION);
 	}

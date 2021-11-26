@@ -45,4 +45,23 @@ public abstract class FileChooser {
 	    }
 	}
 	
+	/**
+	 * Selectionner un dossier
+	 * @param from ouvrir l'explorateur de fichier sur from
+	 * @return le chemin du dossier choisi, null sinon
+	 */
+	public static String selectFolder(String from) {
+		JFileChooser chooser = new JFileChooser();
+		FileNameExtensionFilter filter = new FileNameExtensionFilter("Json files", "json");
+		chooser.setFileFilter(filter);
+	    chooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+	    chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+	    int retrival = chooser.showOpenDialog(null);
+	    if (retrival == JFileChooser.APPROVE_OPTION) {
+	    	return chooser.getSelectedFile().toString();
+	    } else {
+	    	return null;
+	    }
+	}
+	
 }

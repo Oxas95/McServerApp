@@ -6,11 +6,10 @@ import mcServerApp.files.Configuration;
 import mcServerApp.files.Keys;
 import mcServerApp.frames.FrameFileGenerator;
 import mcServerApp.process.TcpServer;
-import net.kronos.rkon.core.ex.AuthenticationException;
 
 public class MainClass {
 
-	public static void main(String[] args) throws IOException, AuthenticationException {
+	public static void main(String[] args) throws IOException {
 		if (args.length < 1) {
 			//System.err.println("Arguments required to launch : <config file>");
 			//System.exit(1);
@@ -18,18 +17,22 @@ public class MainClass {
 			fg.setVisible(true);
 		} else {
 			Configuration config = new Configuration(args[0]);
-			if(!config.isValid()) return;
-			TcpServer server = new TcpServer(config);
-			if((boolean) config.getValueConfig(Keys.autoStart)) server.startServer();
-			while(!server.closed()) {
-				try {
-					server.connect();
-				} catch (Exception e) {
-					System.err.println("An error occurred during the connection attempt.");
-					//e.printStackTrace();
-				}
-			}
-			server.stopServer();
+			run(config);
 		}
+	}
+	
+	public static void run(Configuration cfg) throws IOException {
+		if(!cfg.isValid()) return;
+		TcpServer server = new TcpServer(cfg);
+		if((boolean) cfg.getValueConfig(Keys.autoStart)) server.startServer();
+		while(!server.closed()) {
+			try {
+				server.connect();
+			} catch (Exception e) {
+				System.err.println("An error occurred during the connection attempt.");
+				//e.printStackTrace();
+			}
+		}
+		server.stopServer();
 	}
 }

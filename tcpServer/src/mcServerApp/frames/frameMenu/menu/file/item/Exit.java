@@ -6,12 +6,14 @@ import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
-public class Exit extends JMenuItem {
+import mcServerApp.frames.frameMenu.menu.MenuItem;
+
+public class Exit extends MenuItem {
 
 	public Exit() {
 		super("Exit");
 		setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, KeyEvent.ALT_DOWN_MASK));
-		setIcon(new ImageIcon("resources/icons/exit.png"));
+		setIcon(new ImageIcon(iconsPath + "Shutdown.png"));
 		setMnemonic('X');
 		setName(getText());
 	}

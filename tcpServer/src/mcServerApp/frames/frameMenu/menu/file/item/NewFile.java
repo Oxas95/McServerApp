@@ -6,12 +6,14 @@ import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
-public class NewFile extends JMenuItem {
+import mcServerApp.frames.frameMenu.menu.MenuItem;
+
+public class NewFile extends MenuItem {
 	
 	public NewFile() {
 		super("New File");
 		setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK));
-		setIcon(new ImageIcon("resources/icons/new.png"));
+		setIcon(new ImageIcon(iconsPath + "Document.png"));
 		setMnemonic('N');
 		setName(getText());
 	}

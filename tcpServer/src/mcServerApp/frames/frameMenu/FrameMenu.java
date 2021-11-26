@@ -2,14 +2,13 @@ package mcServerApp.frames.frameMenu;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Stack;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -18,8 +17,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 import mcServerApp.files.Configuration;
 import mcServerApp.files.InvalidKeysValueException;
@@ -28,9 +25,8 @@ import mcServerApp.frames.FileChooser;
 import mcServerApp.frames.FrameDialog;
 import mcServerApp.frames.IFrame;
 import mcServerApp.frames.frameMenu.menu.Menu;
-import mcServerApp.frames.frameMenu.menu.edit.Edit;
-import mcServerApp.frames.frameMenu.menu.edit.item.Redo;
-import mcServerApp.frames.frameMenu.menu.edit.item.Undo;
+import mcServerApp.frames.frameMenu.menu.build.Build;
+import mcServerApp.frames.frameMenu.menu.build.item.GenerateLauncher;
 import mcServerApp.frames.frameMenu.menu.file.item.CloseFile;
 import mcServerApp.frames.frameMenu.menu.file.item.Exit;
 import mcServerApp.frames.frameMenu.menu.file.item.NewFile;
@@ -108,6 +104,7 @@ public class FrameMenu extends IFrame {
 	protected void addContentMenu() {
 		ArrayList<Menu> menus = new ArrayList<Menu>();
 		menus.add(new mcServerApp.frames.frameMenu.menu.file.File());
+		menus.add(new Build());
 		menus.add(new Help());
 		
 		for(Menu m : menus) {
@@ -131,6 +128,7 @@ public class FrameMenu extends IFrame {
 		actionSave(source);
 		actionSaveAs(source);
 		actionExit(source);
+		actionGenerateLauncher(source);
 		
 		refreshComponentStatut();
 	}
@@ -146,15 +144,17 @@ public class FrameMenu extends IFrame {
 		getMenuItemByName("Close File").setEnabled(fileOpened);
 		getMenuItemByName("Save").setEnabled(fileOpened);
 		getMenuItemByName("Save As").setEnabled(fileOpened);
+		getMenuItemByName("Check").setEnabled(fileOpened);
+		getMenuItemByName("Generate Launcher").setEnabled(configFile != null);
+		getMenuItemByName("Launch").setEnabled(fileOpened);
 		
 		//redefinir le titre de la fenetre
-		if(isNewFile) {
+		if(isNewFile)
 			this.setTitle(titleBase + " : New File");
-		} else if (configFile != null && configFile.exists()) {
+		else if (configFile != null && configFile.exists())
 			this.setTitle(titleBase + " : " + configFile.getAbsolutePath());
-		} else {
+		else
 			this.setTitle(titleBase);
-		}
 	}
 	
 	/**
@@ -164,7 +164,8 @@ public class FrameMenu extends IFrame {
 	 */
 	private JMenuItem getMenuItemByName(String name) {
 		for(JMenuItem mi : menuItem)
-			if(mi.getName().equals(name)) return mi;
+			if(mi.getName().equals(name))
+				return mi;
 		return null;
 	}
 	
@@ -228,9 +229,8 @@ public class FrameMenu extends IFrame {
 		if(configFile.exists() && confirmOverwrite) {
 			Integer res;
 			res = FrameDialog.confirmOverwrite(this, cfg.getFileName());
-			if(res == JOptionPane.YES_OPTION) {
+			if(res == JOptionPane.YES_OPTION)
 				writeConfig(cfg);
-			}
 		} else
 			writeConfig(cfg);
 	}
@@ -259,6 +259,32 @@ public class FrameMenu extends IFrame {
 	private void actionExit(Object source) {
 		if(source.getClass() == Exit.class) {
 			System.exit(0);
+		}
+	}
+	
+	private void generateBatch(Configuration cfg, String folder) {
+		String path = folder + File.separator + cfg.getConfigFileName() + ".bat";
+		File f = new File(path);
+		if(f.exists()) {
+			FrameDialog.error(this, "Error", "The file <" + cfg.getConfigFileName() + ".bat> already exists in this folder.");
+			return;
+		}
+		try {
+			PrintWriter writer = new PrintWriter(path);
+			writer.print("java -jar " + System.getProperty("user.dir") + File.separator + "McServerApp.jar " + cfg.getAbsolutePathConfigFile());
+			writer.flush();
+			writer.close();
+			FrameDialog.info(this, "Information", "The file <" + path + "> was created successfully.");
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+	}
+	
+	private void actionGenerateLauncher(Object source) {
+		if(source.getClass() == GenerateLauncher.class) {
+			String folder = FileChooser.selectFolder(System.getProperty("user.dir"));
+			if(folder != null)
+				generateBatch(new Configuration(configFile.getAbsolutePath(), false), folder);
 		}
 	}
 }

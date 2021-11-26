@@ -2,15 +2,17 @@ package mcServerApp.frames.frameMenu.menu.file.item;
 
 import java.awt.event.KeyEvent;
 
-import javax.swing.JMenuItem;
+import javax.swing.ImageIcon;
 import javax.swing.KeyStroke;
 
-public class CloseFile extends JMenuItem {
+import mcServerApp.frames.frameMenu.menu.MenuItem;
+
+public class CloseFile extends MenuItem {
 
 	public CloseFile() {
 		super("Close File");
 		setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, KeyEvent.CTRL_DOWN_MASK));
-		//currentMenuItem.setIcon(new ImageIcon("resources/icons/close.png"));
+		setIcon(new ImageIcon(iconsPath + "Cancel.png"));
 		setMnemonic('C');
 		setName(getText());
 	}
