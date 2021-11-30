@@ -187,9 +187,11 @@ public class FrameMenu extends IFrame {
 		return null;
 	}
 	
-	private Configuration getConfiguration() {
+	private Configuration getConfiguration(String path) {
 		try {
-			Configuration cfg = new Configuration(configFile.getAbsolutePath(), false);
+			
+			System.out.println(path);
+			Configuration cfg = new Configuration(path, false);
 			Keys[] keys = Keys.values();
 			for(Keys k : keys)
 				cfg.setValueConfig(k, k.parse(textFields.get(k).getText()));
@@ -204,7 +206,7 @@ public class FrameMenu extends IFrame {
 			isNewFile = true;
 			configFile = null;
 			for(Keys k : Keys.values())
-				textFields.get(k).setText("");
+				textFields.get(k).setText("" + k.getDefaultValue());
 		}
 	}
 	
@@ -247,7 +249,7 @@ public class FrameMenu extends IFrame {
 	}
 	
 	private void save(boolean confirmOverwrite, File configFile) {
-		Configuration cfg = getConfiguration();
+		Configuration cfg = getConfiguration(configFile.getPath());
 		if(configFile.exists() && confirmOverwrite) {
 			Integer res;
 			res = FrameDialog.confirmOverwrite(this, cfg.getFileName());
@@ -339,7 +341,7 @@ public class FrameMenu extends IFrame {
 		if(source.getClass() == Launch.class) {
 			
 			if(check()) {
-				Configuration cfg = getConfiguration();
+				Configuration cfg = getConfiguration(configFile.getPath());
 				FrameGui gui = new FrameGui();
 				gui.initializeThreads(cfg);
 				gui.launch();
