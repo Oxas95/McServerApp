@@ -1,9 +1,14 @@
 package mcServerApp;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 import mcServerApp.files.Configuration;
 import mcServerApp.files.Keys;
+import mcServerApp.frames.FrameDialog;
 import mcServerApp.frames.FrameGui;
 import mcServerApp.frames.frameMenu.FrameMenu;
 import mcServerApp.process.TcpServer;
@@ -17,7 +22,10 @@ public class MainClass {
 	//TODO Possibilite de changer le langage
 	
 	public static void main(String[] args) throws IOException {
-		if (args.length < 1) {
+		if(args.length == 0) {
+			args = getArgsInResources();
+		}
+		if (args.length != 1) {
 			FrameMenu fm = new FrameMenu();
 			fm.setVisible(true);
 		} else {
@@ -28,6 +36,24 @@ public class MainClass {
 				else
 					runGui(config);
 		}
+	}
+	
+	public static String[] getArgsInResources() {
+		String filePath = "Resources/args.txt";
+		try {
+			Path path = Paths.get(filePath);
+			List<String> lines = Files.readAllLines(path);
+			if(lines.size() == 1) {
+				return lines.get(0).split(" ");
+			}
+		} catch (IOException e) {
+			java.io.File f = new java.io.File(filePath);
+			if(!f.exists())
+				try {
+					f.createNewFile();
+				} catch (IOException e1) {}
+		}
+		return new String[] {};
 	}
 	
 	public static void run(Configuration cfg) throws IOException {
@@ -47,7 +73,15 @@ public class MainClass {
 	
 	public static void runGui(Configuration cfg) {
 		FrameGui gui = new FrameGui();
-		gui.initializeThreads(cfg);
-		gui.launch();
+		
+		if(!cfg.isValid()) {
+			FrameDialog.error(gui, "Error", "Cannot start the server because the configuration file is invalid.");
+			return;
+		} else {
+			gui.initializeThreads(cfg);
+			gui.launch();
+		}
+		
+		
 	}
 }
