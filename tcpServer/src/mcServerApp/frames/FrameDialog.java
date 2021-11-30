@@ -1,12 +1,19 @@
 package mcServerApp.frames;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+
+import mcServerApp.frames.frameMenu.menu.MenuItem;
 
 public abstract class FrameDialog {
 
 	public static void info(JFrame frame, String title, String message) {
 		JOptionPane.showMessageDialog(frame, message, title, JOptionPane.INFORMATION_MESSAGE);
+	}
+	
+	public static void custom(JFrame frame, String title, String message, String iconFileName) {
+		JOptionPane.showMessageDialog(frame, message, title, JOptionPane.INFORMATION_MESSAGE, new ImageIcon(MenuItem.iconsPath + iconFileName));
 	}
 	
 	public static int confirm(JFrame frame, String title, String message) {

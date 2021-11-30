@@ -36,7 +36,10 @@ public enum Keys {
 		@Override
 		public Object parse(String value) throws InvalidKeysValueException {
 			try {
-				return Boolean.parseBoolean(value);
+				if(value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false"))
+					return Boolean.parseBoolean(value);
+				else
+					throw new Exception(); // aller dans le catch
 			} catch (Exception e) {
 				throw new InvalidKeysValueException(value, this);
 			}
@@ -54,6 +57,17 @@ public enum Keys {
 		@Override
 		public Object parse(String value) {
 			return value;
+		}
+	},
+	noGui("no window", false) {
+		@Override
+		public boolean check(Object value) {
+			return autoStart.check(value);
+		}
+
+		@Override
+		public Object parse(String value) throws InvalidKeysValueException {
+			return autoStart.parse(value);
 		}
 	},
 	rconPassword("rcon password", Configuration.none) {

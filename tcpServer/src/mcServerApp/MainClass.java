@@ -4,20 +4,29 @@ import java.io.IOException;
 
 import mcServerApp.files.Configuration;
 import mcServerApp.files.Keys;
-import mcServerApp.frames.FrameFileGenerator;
+import mcServerApp.frames.FrameGui;
+import mcServerApp.frames.frameMenu.FrameMenu;
 import mcServerApp.process.TcpServer;
 
 public class MainClass {
 
+	//TODO gerer les exceptions
+	//TODO faire tous les tests d'utilisation
+	//TODO faire la javadoc
+	//TODO rendre executable sur linux et macOS
+	//TODO Possibilite de changer le langage
+	
 	public static void main(String[] args) throws IOException {
 		if (args.length < 1) {
-			//System.err.println("Arguments required to launch : <config file>");
-			//System.exit(1);
-			FrameFileGenerator fg = new FrameFileGenerator();
-			fg.setVisible(true);
+			FrameMenu fm = new FrameMenu();
+			fm.setVisible(true);
 		} else {
 			Configuration config = new Configuration(args[0]);
-			run(config);
+			boolean noGui = (boolean) config.getValueConfig(Keys.noGui);
+				if(noGui)
+					run(config);
+				else
+					runGui(config);
 		}
 	}
 	
@@ -34,5 +43,11 @@ public class MainClass {
 			}
 		}
 		server.stopServer();
+	}
+	
+	public static void runGui(Configuration cfg) {
+		FrameGui gui = new FrameGui();
+		gui.initializeThreads(cfg);
+		gui.launch();
 	}
 }

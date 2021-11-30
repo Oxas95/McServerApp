@@ -1,15 +1,24 @@
 package mcServerApp.frames.frameMenu;
 
+import java.awt.Desktop;
 import java.awt.GridLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuBar;
@@ -18,15 +27,21 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import main.TcpClient;
+import mcServerApp.MainClass;
 import mcServerApp.files.Configuration;
 import mcServerApp.files.InvalidKeysValueException;
 import mcServerApp.files.Keys;
 import mcServerApp.frames.FileChooser;
 import mcServerApp.frames.FrameDialog;
+import mcServerApp.frames.FrameGui;
 import mcServerApp.frames.IFrame;
 import mcServerApp.frames.frameMenu.menu.Menu;
+import mcServerApp.frames.frameMenu.menu.MenuItem;
 import mcServerApp.frames.frameMenu.menu.build.Build;
+import mcServerApp.frames.frameMenu.menu.build.item.FileChecker;
 import mcServerApp.frames.frameMenu.menu.build.item.GenerateLauncher;
+import mcServerApp.frames.frameMenu.menu.build.item.Launch;
 import mcServerApp.frames.frameMenu.menu.file.item.CloseFile;
 import mcServerApp.frames.frameMenu.menu.file.item.Exit;
 import mcServerApp.frames.frameMenu.menu.file.item.NewFile;
@@ -34,11 +49,9 @@ import mcServerApp.frames.frameMenu.menu.file.item.OpenFile;
 import mcServerApp.frames.frameMenu.menu.file.item.SaveAsFile;
 import mcServerApp.frames.frameMenu.menu.file.item.SaveFile;
 import mcServerApp.frames.frameMenu.menu.help.Help;
+import mcServerApp.frames.frameMenu.menu.help.item.About;
 
 public class FrameMenu extends IFrame {
-	//TODO petit menu pour le fichier de configuration (create, save as...)
-	//un bouton launch pour lancer avec la configuration chargee
-	//un bouton pour générer un batch
 	
 	/**
 	 * Default Serial Number
@@ -64,8 +77,9 @@ public class FrameMenu extends IFrame {
 		setTitle(titleBase);
 		setSize(500, 400);
 		setResizable(true);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(null);
+		setIconImage(Toolkit.getDefaultToolkit().getImage(MenuItem.iconsPath + "Diamond.png"));
 		
 		menuItem = new ArrayList<JMenuItem>();
 		textFields = new HashMap<Keys, JTextField>();
@@ -129,10 +143,14 @@ public class FrameMenu extends IFrame {
 		actionSaveAs(source);
 		actionExit(source);
 		actionGenerateLauncher(source);
+		actionFileChecker(source);
+		actionLaunch(source);
+		
+		actionAbout(source);
 		
 		refreshComponentStatut();
 	}
-	
+
 	private void refreshComponentStatut() {
 		//activer ou desactiver les composants de la fenetre si un fichier est ouvert ou non
 		boolean fileOpened = isNewFile || ((configFile != null) ? configFile.exists() : false);
@@ -169,10 +187,24 @@ public class FrameMenu extends IFrame {
 		return null;
 	}
 	
+	private Configuration getConfiguration() {
+		try {
+			Configuration cfg = new Configuration(configFile.getAbsolutePath(), false);
+			Keys[] keys = Keys.values();
+			for(Keys k : keys)
+				cfg.setValueConfig(k, k.parse(textFields.get(k).getText()));
+			return cfg;
+		} catch (InvalidKeysValueException | NullPointerException e) {
+			return null;
+		}
+	}
+	
 	private void actionNewFile(Object source) {
 		if(source.getClass() == NewFile.class) {
 			isNewFile = true;
 			configFile = null;
+			for(Keys k : Keys.values())
+				textFields.get(k).setText("");
 		}
 	}
 	
@@ -184,8 +216,7 @@ public class FrameMenu extends IFrame {
 				configFile = new File(openFilePath);
 				if(configFile.exists()) {
 					Configuration cfg = new Configuration(configFile.getAbsolutePath());
-					Keys[] keys = Keys.values();
-					for(Keys k : keys) {
+					for(Keys k : Keys.values()) {
 						textFields.get(k).setText("" + cfg.getValueConfig(k));
 					}
 				}
@@ -197,35 +228,26 @@ public class FrameMenu extends IFrame {
 		if(source.getClass() == CloseFile.class) {
 			isNewFile = false;
 			configFile = null;
+			for(Keys k : Keys.values())
+				textFields.get(k).setText("");
 		}
 	}
 	
 	private void writeConfig(Configuration cfg) {
-		String errorMessage = null;
 		try {
-			for(Keys k : Keys.values()) {
-				errorMessage = "The value for the <" + k.toString() + "> field is invalid";
-				Object value = k.parse(textFields.get(k).getText());
-				if(!k.check(value)) {
-					FrameDialog.error(this, "Warning", errorMessage);
-					return;
-				}
-				cfg.setValueConfig(k, value);
+			if(check()) {
+				cfg.jsonToFile();
 			}
-			cfg.jsonToFile();
 			this.configFile = new File(cfg.getAbsolutePathConfigFile());
 			isNewFile = false;
 		} catch (NullPointerException | IOException e) {
 			e.printStackTrace();
 			FrameDialog.errorSave(this);
-		} catch (InvalidKeysValueException e) {
-			FrameDialog.error(this, "Warning", errorMessage);
-			return;
 		}
 	}
 	
 	private void save(boolean confirmOverwrite, File configFile) {
-		Configuration cfg = new Configuration(configFile.getAbsolutePath(), false);
+		Configuration cfg = getConfiguration();
 		if(configFile.exists() && confirmOverwrite) {
 			Integer res;
 			res = FrameDialog.confirmOverwrite(this, cfg.getFileName());
@@ -285,6 +307,79 @@ public class FrameMenu extends IFrame {
 			String folder = FileChooser.selectFolder(System.getProperty("user.dir"));
 			if(folder != null)
 				generateBatch(new Configuration(configFile.getAbsolutePath(), false), folder);
+		}
+	}
+	
+	private boolean check() {
+		for(Keys k : Keys.values()) {
+			String errorMessage =  "The value for the <" + k.toString() + "> field is invalid";
+			try {
+				Object value = k.parse(textFields.get(k).getText());
+				if(!k.check(value)) {
+					FrameDialog.error(this, "Error", errorMessage);
+					return false;
+				}
+			} catch (InvalidKeysValueException e) {
+				e.printStackTrace();
+				FrameDialog.error(this, "Error", errorMessage);
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	private void actionFileChecker(Object source) {
+		if(source.getClass() == FileChecker.class) {
+			if(check())
+				FrameDialog.custom(this, "Information", "All the fields are valid", "Approval.png");
+		}
+	}
+	
+	private void actionLaunch(Object source) {
+		if(source.getClass() == Launch.class) {
+			
+			if(check()) {
+				Configuration cfg = getConfiguration();
+				FrameGui gui = new FrameGui();
+				gui.initializeThreads(cfg);
+				gui.launch();
+				
+				JFrame frame = this;
+				Thread t = new Thread() {
+					public void run() {
+						frame.setVisible(false);
+						while(gui.isVisible()) {
+							try {
+								Thread.sleep(1000);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+						frame.setVisible(true);
+						try {
+							TcpClient client = new TcpClient("127.0.0.1", (int) cfg.getValueConfig(Keys.appPort));
+							client.send("exit");
+							client.close();
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
+					}
+				};
+				t.start();
+			}
+		}
+	}
+	
+
+	private void actionAbout(Object source) {
+		if(source.getClass() == About.class) {
+			try {
+				Desktop.getDesktop().browse(new URI("https://github.com/Oxas95/McServerApp"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

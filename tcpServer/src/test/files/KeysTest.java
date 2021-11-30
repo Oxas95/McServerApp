@@ -1,6 +1,8 @@
 package test.files;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -8,6 +10,7 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 
+import mcServerApp.files.InvalidKeysValueException;
 import mcServerApp.files.Keys;
 
 class KeysTest {
@@ -24,7 +27,9 @@ class KeysTest {
 	
 	*/
 	
-	private void testValueWithBounds(Keys k, int inf, int sup) {
+	/** Verifier la methode check() */
+	
+	private void testValueWithBoundsCheck(Keys k, int inf, int sup) {
 		/* test des bornes superieur et inferieur */
 		assertFalse(k.check(inf - 1));
 		assertTrue(k.check(inf));
@@ -36,21 +41,21 @@ class KeysTest {
 		assertFalse(k.check("1111"));
 	}
 	
-	private void testPassword(Keys k) {
+	private void testPasswordCheck(Keys k) {
 		assertFalse(k.check(""));
 		assertFalse(k.check(1202));
 		assertFalse(k.check("1234567"));
 		assertTrue(k.check("12345678"));
 	}
 	
-	private void testBoolean(Keys k) {
+	private void testBooleanCheck(Keys k) {
 		assertTrue(k.check(true));
 		assertTrue(k.check(false));
 		assertFalse(k.check("false"));
 		assertFalse(k.check(0));
 	}
 	
-	private void testExistingFile(Keys k) {
+	private void testExistingFileCheck(Keys k) {
 		final String batchPath = "testFile.txt";
 		File file = new File(batchPath);
 		if(!file.exists()) {
@@ -69,43 +74,119 @@ class KeysTest {
 		assertFalse(k.check("src"));
 	}
 	
+	
 	@Test
-	void testAppPort() {
-		testValueWithBounds(Keys.appPort, 1001, 65534);
+	void testAppPortCheck() {
+		testValueWithBoundsCheck(Keys.appPort, 1001, 65534);
 	}
 	
 	@Test
-	void testAutoStart() {
-		testBoolean(Keys.autoStart);
+	void testAutoStartCheck() {
+		testBooleanCheck(Keys.autoStart);
 	}
 	
 	@Test
-	void testBatchPath() {
-		testExistingFile(Keys.batchPath);
+	void testBatchPathCheck() {
+		testExistingFileCheck(Keys.batchPath);
 	}
 	
 	@Test
-	void testRconPassword() {
-		testPassword(Keys.rconPassword);
+	void testNoGuiCheck() {
+		testBooleanCheck(Keys.noGui);
 	}
 	
 	@Test
-	void testRconPort() {
-		testValueWithBounds(Keys.rconPort, 1001, 65534);
+	void testRconPasswordCheck() {
+		testPasswordCheck(Keys.rconPassword);
 	}
 	
 	@Test
-	void testStartPassword() {
-		testPassword(Keys.startPassword);
+	void testRconPortCheck() {
+		testValueWithBoundsCheck(Keys.rconPort, 1001, 65534);
 	}
 	
 	@Test
-	void testStopPassword() {
-		testPassword(Keys.stopPassword);
+	void testStartPasswordCheck() {
+		testPasswordCheck(Keys.startPassword);
 	}
 	
 	@Test
-	void testTimeout() {
-		testValueWithBounds(Keys.timeout, 0, 15 * 60);
+	void testStopPasswordCheck() {
+		testPasswordCheck(Keys.stopPassword);
+	}
+	
+	@Test
+	void testTimeoutCheck() {
+		testValueWithBoundsCheck(Keys.timeout, 0, 15 * 60);
+	}
+	
+	/** Verifier la methode parse */
+	
+	private void testIntegerParse(Keys k) throws InvalidKeysValueException {
+		assertEquals(k.parse("100"), 100);
+		assertThrows(InvalidKeysValueException.class, () -> {
+			k.parse("100.01");
+		});
+		assertThrows(InvalidKeysValueException.class, () -> {
+			k.parse("aaaaaaa");
+		});
+	}
+	
+	private void testBooleanParse(Keys k) throws InvalidKeysValueException {
+		assertEquals(k.parse("true"), true);
+		assertEquals(k.parse("false"), false);
+		assertEquals(k.parse("TRUE"), true);
+		assertEquals(k.parse("falSE"), false);
+		assertThrows(InvalidKeysValueException.class, () -> {
+			k.parse("truelkdfjsf");
+		});
+		assertThrows(InvalidKeysValueException.class, () -> {
+			k.parse("aaaaaaa");
+		});
+	}
+	
+	@Test
+	void testAppPortParse() throws InvalidKeysValueException {
+		testIntegerParse(Keys.appPort);
+	}
+	
+	@Test
+	void testAutoStartParse() throws InvalidKeysValueException {
+		testBooleanParse(Keys.autoStart);
+	}
+	
+	@Test
+	void testBatchPathParse() throws InvalidKeysValueException {
+		assertTrue(Keys.batchPath.parse("testStr").equals("testStr"));
+	}
+	
+	@Test
+	void testNoGuiParse() throws InvalidKeysValueException {
+		testBooleanParse(Keys.noGui);
+	}
+	
+	@Test
+	void testRconPasswordParse() throws InvalidKeysValueException {
+		assertTrue(Keys.rconPassword.parse("testStr").equals("testStr"));
+	}
+	
+	@Test
+	void testRconPortParse() throws InvalidKeysValueException {
+		testIntegerParse(Keys.rconPort);
+	}
+	
+	@Test
+	void testStartPasswordParse() throws InvalidKeysValueException {
+		assertTrue(Keys.startPassword.parse("testStr").equals("testStr"));
+	}
+	
+	@Test
+	void testStopPasswordParse() throws InvalidKeysValueException {
+		assertTrue(Keys.stopPassword.parse("testStr").equals("testStr"));
+	}
+	
+	@Test
+	void testTimeoutParse() throws InvalidKeysValueException {
+		testIntegerParse(Keys.timeout);
 	}
 }

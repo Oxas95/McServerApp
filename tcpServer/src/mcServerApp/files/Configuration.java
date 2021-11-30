@@ -14,7 +14,6 @@ public class Configuration {
 	
 	private JSONObject obj;
 	private String fileName;
-	//TODO parametre nogui
 
 	/**
 	 * Valeur par defaut des champs de type String (utilise dans l’enum Keys)
@@ -127,7 +126,6 @@ public class Configuration {
 	}
 	
 	private void fileToJson() throws FileNotFoundException {
-		//TODO gérer les exceptions
 		if(fileName.endsWith(".json") == false) fileName += ".json";
 		Scanner s = new Scanner(new File(fileName));
 		String file = "";
