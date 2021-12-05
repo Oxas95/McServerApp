@@ -16,7 +16,7 @@ import mcServerApp.MainClass;
 import mcServerApp.files.Configuration;
 import mcServerApp.frames.frameMenu.menu.MenuItem;
 
-public class FrameGui extends JFrame{
+public class FrameGui extends JFrame {
 
 	JTextArea textArea;
 	Thread server;

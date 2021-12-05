@@ -15,6 +15,7 @@ import mcServerApp.process.TcpServer;
 
 public class MainClass {
 
+	//TODO faire un bouton pour remplir automatiquement le fichier args.txt dans resources
 	//TODO gerer les exceptions
 	//TODO faire tous les tests d'utilisation
 	//TODO faire la javadoc
@@ -39,7 +40,7 @@ public class MainClass {
 	}
 	
 	public static String[] getArgsInResources() {
-		String filePath = "Resources/args.txt";
+		String filePath = System.getProperty("user.dir") + "Resources/args.txt";
 		try {
 			Path path = Paths.get(filePath);
 			List<String> lines = Files.readAllLines(path);

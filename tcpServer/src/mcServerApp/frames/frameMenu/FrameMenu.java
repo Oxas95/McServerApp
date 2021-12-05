@@ -35,7 +35,7 @@ import mcServerApp.files.Keys;
 import mcServerApp.frames.FileChooser;
 import mcServerApp.frames.FrameDialog;
 import mcServerApp.frames.FrameGui;
-import mcServerApp.frames.IFrame;
+import mcServerApp.frames.AFrame;
 import mcServerApp.frames.frameMenu.menu.Menu;
 import mcServerApp.frames.frameMenu.menu.MenuItem;
 import mcServerApp.frames.frameMenu.menu.build.Build;
@@ -51,7 +51,7 @@ import mcServerApp.frames.frameMenu.menu.file.item.SaveFile;
 import mcServerApp.frames.frameMenu.menu.help.Help;
 import mcServerApp.frames.frameMenu.menu.help.item.About;
 
-public class FrameMenu extends IFrame {
+public class FrameMenu extends AFrame {
 	
 	/**
 	 * Default Serial Number
@@ -239,9 +239,9 @@ public class FrameMenu extends IFrame {
 		try {
 			if(check()) {
 				cfg.jsonToFile();
+				this.configFile = new File(cfg.getAbsolutePathConfigFile());
+				isNewFile = false;
 			}
-			this.configFile = new File(cfg.getAbsolutePathConfigFile());
-			isNewFile = false;
 		} catch (NullPointerException | IOException e) {
 			e.printStackTrace();
 			FrameDialog.errorSave(this);
@@ -272,6 +272,7 @@ public class FrameMenu extends IFrame {
 	private void actionSaveAs(Object source) {
 		if(source.getClass() == SaveAsFile.class) {
 			String path = FileChooser.selectNewFilePath(System.getProperty("user.dir"));
+			if(!path.endsWith(".json")) path += ".json";
 			File configFile = null;
 			if(path != null) {
 				configFile = new File(path);

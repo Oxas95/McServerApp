@@ -4,7 +4,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JFrame;
 
-public abstract class IFrame extends JFrame implements ActionListener {
+public abstract class AFrame extends JFrame implements ActionListener {
 
 	/**
 	 * Default Serial Number
@@ -12,7 +12,7 @@ public abstract class IFrame extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	
 	
-	public IFrame() {
+	public AFrame() {
 		super();
 		build();
 		addContent();
