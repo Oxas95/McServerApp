@@ -27,4 +27,14 @@ public class TcpClient {
 		System.out.println("Close connection");
 		socket.close();
 	}
+	
+	public static void sendExitMessageToLocalHost(int port) {
+		try {
+			TcpClient client = new TcpClient("127.0.0.1", port);
+			client.send("exit");
+			client.close();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
 }

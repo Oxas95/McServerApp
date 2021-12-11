@@ -115,4 +115,14 @@ public class FrameGui extends JFrame {
 			FrameDialog.error(this, "Error", "Unable to launch the server : Initialization undone.");
 		}
 	}
+	
+	public void waitClose() {
+		while(this.isVisible()) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }

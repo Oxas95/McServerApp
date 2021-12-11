@@ -12,6 +12,7 @@ import mcServerApp.frames.FrameDialog;
 import mcServerApp.frames.FrameGui;
 import mcServerApp.frames.frameMenu.FrameMenu;
 import mcServerApp.process.TcpServer;
+import mcServerApp.process.ThreadServerKiller;
 
 public class MainClass {
 
@@ -23,6 +24,7 @@ public class MainClass {
 	//TODO Possibilite de changer le langage
 	
 	public static void main(String[] args) throws IOException {
+		//FrameDialog.info(null, "Information", Paths.get("").toAbsolutePath().toString());
 		if(args.length == 0) {
 			args = getArgsInResources();
 		}
@@ -40,7 +42,7 @@ public class MainClass {
 	}
 	
 	public static String[] getArgsInResources() {
-		String filePath = System.getProperty("user.dir") + "Resources/args.txt";
+		String filePath = "Resources/args.txt";
 		try {
 			Path path = Paths.get(filePath);
 			List<String> lines = Files.readAllLines(path);
@@ -81,8 +83,7 @@ public class MainClass {
 		} else {
 			gui.initializeThreads(cfg);
 			gui.launch();
+			new ThreadServerKiller(cfg, gui, null).start();
 		}
-		
-		
 	}
 }

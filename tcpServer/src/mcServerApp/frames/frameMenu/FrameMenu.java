@@ -50,6 +50,7 @@ import mcServerApp.frames.frameMenu.menu.file.item.SaveAsFile;
 import mcServerApp.frames.frameMenu.menu.file.item.SaveFile;
 import mcServerApp.frames.frameMenu.menu.help.Help;
 import mcServerApp.frames.frameMenu.menu.help.item.About;
+import mcServerApp.process.ThreadServerKiller;
 
 public class FrameMenu extends AFrame {
 	
@@ -348,27 +349,9 @@ public class FrameMenu extends AFrame {
 				gui.launch();
 				
 				JFrame frame = this;
-				Thread t = new Thread() {
-					public void run() {
-						frame.setVisible(false);
-						while(gui.isVisible()) {
-							try {
-								Thread.sleep(1000);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-						frame.setVisible(true);
-						try {
-							TcpClient client = new TcpClient("127.0.0.1", (int) cfg.getValueConfig(Keys.appPort));
-							client.send("exit");
-							client.close();
-						} catch (IOException e1) {
-							e1.printStackTrace();
-						}
-					}
-				};
-				t.start();
+				frame.setVisible(false);
+				
+				new ThreadServerKiller(cfg, gui, () -> {frame.setVisible(true);}).start();
 			}
 		}
 	}
